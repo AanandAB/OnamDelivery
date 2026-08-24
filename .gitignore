@@ -1,0 +1,9 @@
+# Node / wrangler artifacts (backend)
+node_modules/
+.wrangler/
+dist/
+.dev.vars
+
+# Build output
+*.log
+.DS_Store
