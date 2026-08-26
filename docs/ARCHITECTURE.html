@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OnamDelivery — Technical Architecture &amp; Stack</title>
+<style>
+  :root {
+    --rose: #d94f70;
+    --leaf: #3fa34d;
+    --gold: #b8860b;
+    --ink: #1f2430;
+    --muted: #5a6270;
+    --line: #e3e0d8;
+    --bg: #ffffff;
+    --chip: #f4efe6;
+  }
+  @page { size: A4; margin: 16mm 15mm 18mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 10.5pt;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  /* Cover */
+  .cover { padding: 8mm 0 4mm; border-bottom: 3px solid var(--rose); margin-bottom: 6mm; }
+  .cover .kicker { color: var(--rose); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 9pt; }
+  .cover h1 { font-size: 26pt; margin: 4px 0 2px; line-height: 1.15; }
+  .cover .sub { color: var(--muted); font-size: 12pt; }
+  .cover .meta { margin-top: 10px; font-size: 9pt; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .cover .meta b { color: var(--ink); }
+
+  h2 { font-size: 15pt; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--line); color: var(--ink); }
+  h2 .num { color: var(--rose); margin-right: 8px; }
+  h3 { font-size: 11.5pt; margin: 16px 0 6px; color: var(--ink); }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0 6px 20px; padding: 0; }
+  li { margin: 3px 0; }
+  code { font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 8.8pt; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+  pre { background: #262b36; color: #e6e9ef; padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 8.6pt; line-height: 1.45; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .mono { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt; }
+  th { text-align: left; background: #f6f2ea; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 7px 9px; border: 1px solid var(--line); }
+  td { padding: 6px 9px; border: 1px solid var(--line); vertical-align: top; }
+  tr { page-break-inside: avoid; }
+  .td-title { font-weight: 700; white-space: nowrap; }
+
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .card { flex: 1 1 180px; border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .card h4 { margin: 0 0 4px; font-size: 10.5pt; }
+  .card .role { display: inline-block; font-size: 7.5pt; font-weight: 700; color: #fff; background: var(--rose); border-radius: 999px; padding: 2px 8px; margin-bottom: 6px; }
+  .card p { font-size: 8.6pt; color: var(--muted); margin: 4px 0; }
+  .card ul { font-size: 8.6pt; margin: 4px 0 0 16px; }
+
+  .tag { display: inline-block; font-size: 7.5pt; font-weight: 700; border-radius: 5px; padding: 1px 7px; margin: 0 3px 3px 0; }
+  .tag.rose { background: #fde8ee; color: #b03a57; }
+  .tag.leaf { background: #e3f3e5; color: #23742f; }
+  .tag.blue { background: #e3edfb; color: #1a5fa8; }
+  .tag.gold { background: #fbf0d5; color: #8a6200; }
+
+  .note { background: #f6f2ea; border-left: 4px solid var(--gold); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 9pt; margin: 12px 0; }
+  .warn { background: #fde8ee; border-left: 4px solid var(--rose); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 9pt; margin: 12px 0; }
+
+  .page-break { page-break-before: always; }
+  .avoid-break { page-break-inside: avoid; }
+  figure { margin: 14px 0; page-break-inside: avoid; }
+  figcaption { font-size: 8pt; color: var(--muted); text-align: center; margin-top: 6px; }
+  svg text { font-family: "Segoe UI", system-ui, sans-serif; }
+
+  footer.doc { margin-top: 24px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 8pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== COVER ===================== -->
+  <div class="cover">
+    <div class="kicker">Technical Documentation</div>
+    <h1>OnamDelivery<br/>Technical Architecture &amp; Technology Stack</h1>
+    <div class="sub">A &ldquo;Swiggy for Flowers&rdquo; marketplace for Kannur / Onam — vendors, customers, and delivery partners on one platform.</div>
+    <div class="meta">
+      <span><b>Repository</b> github.com/AanandAB/OnamDelivery</span>
+      <span><b>API</b> onam-flowers-api.aanandab44.workers.dev</span>
+      <span><b>Admin</b> onam-flowers-admin.pages.dev</span>
+      <span><b>Author</b> Aanand AB</span>
+    </div>
+  </div>
+
+  <!-- ===================== 1. OVERVIEW ===================== -->
+  <h2><span class="num">1.</span>Overview</h2>
+  <p>
+    <b>OnamDelivery</b> is a hyperlocal flower-delivery marketplace for the Onam season. It connects three
+    sides of a marketplace — <b>customers</b> who order flowers, <b>vendors</b> who sell them, and
+    <b>delivery partners</b> who carry them — under a single <b>company-owner</b> dashboard that keeps the
+    platform operator in full control. Every order carries a guaranteed per-order profit for the platform,
+    and delivery partners are paid per kilometre at a rate that always beats their fuel cost.
+  </p>
+  <p>The system is <b>edge-first and serverless</b>: the entire backend is one Cloudflare Worker talking to a
+  serverless SQLite database (D1), with no self-hosted servers, no containers, and no per-instance state.</p>
+
+  <div class="grid">
+    <div class="card"><h4>Customers</h4><span class="role">Flutter</span><p>Browse, order, pay COD, live-track the partner, and rate the vendor.</p></div>
+    <div class="card"><h4>Vendors</h4><span class="role">Web console</span><p>List stock, edit prices, toggle open &amp; own-delivery, see the order queue.</p></div>
+    <div class="card"><h4>Partners</h4><span class="role">Flutter · Android</span><p>Go online, accept orders, navigate with GPS, deliver with an OTP, earn per km.</p></div>
+    <div class="card"><h4>Owner</h4><span class="role">Web dashboard</span><p>Edit any vendor&rsquo;s stock/price, analytics, settlements, approvals, live ops map.</p></div>
+  </div>
+
+  <div class="note"><b>Key design goals</b> — four role-isolated surfaces sharing one API · COD-first payments ·
+  vendor &ldquo;zero-hassle&rdquo; console · guaranteed platform margin · Indian DPDP Act 2023 compliance.</div>
+
+  <!-- ===================== 2. ARCHITECTURE ===================== -->
+  <h2><span class="num">2.</span>High-Level Architecture</h2>
+  <p>Three client surfaces talk to a single stateless Worker API over HTTPS/JSON. The Worker is the only
+  thing that reads or writes the database; clients never touch D1 directly.</p>
+
+  <figure>
+  <svg viewBox="0 0 900 690" width="100%" xmlns="http://www.w3.org/2000/svg" font-size="12">
+    <defs>
+      <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#9aa3b2"/></marker>
+    </defs>
+
+    <!-- Clients -->
+    <text x="14" y="26" font-size="12" font-weight="700" fill="#b03a57">CLIENTS</text>
+    <rect x="14" y="36" width="205" height="58" rx="8" fill="#fde8ee" stroke="#d94f70"/>
+    <text x="28" y="58" font-weight="700" fill="#b03a57">Customer App</text>
+    <text x="28" y="74" font-size="10" fill="#7a4756">Flutter · Android APK + Web</text>
+    <text x="28" y="86" font-size="9.5" fill="#9a6a79">Riverpod · go_router · dio</text>
+
+    <rect x="233" y="36" width="205" height="58" rx="8" fill="#fde8ee" stroke="#d94f70"/>
+    <text x="247" y="58" font-weight="700" fill="#b03a57">Partner App</text>
+    <text x="247" y="74" font-size="10" fill="#7a4756">Flutter · Android only</text>
+    <text x="247" y="86" font-size="9.5" fill="#9a6a79">+ geolocator · flutter_map</text>
+
+    <rect x="452" y="36" width="205" height="58" rx="8" fill="#fbf0d5" stroke="#c99a2e"/>
+    <text x="466" y="58" font-weight="700" fill="#8a6200">Admin Console</text>
+    <text x="466" y="74" font-size="10" fill="#7a6a3d">Cloudflare Pages · vanilla JS</text>
+    <text x="466" y="86" font-size="9.5" fill="#8a7a55">Vendor + Owner (role-gated)</text>
+
+    <rect x="671" y="36" width="205" height="58" rx="8" fill="#eef0f3" stroke="#9aa3b2"/>
+    <text x="685" y="58" font-weight="700" fill="#44506a">API Clients</text>
+    <text x="685" y="74" font-size="10" fill="#5a6270">curl · Postman · scripts</text>
+    <text x="685" y="86" font-size="9.5" fill="#6a7280">direct HTTPS/JSON</text>
+
+    <!-- arrows clients -> api -->
+    <line x1="116" y1="94" x2="200" y2="150" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="335" y1="94" x2="335" y2="150" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="554" y1="94" x2="480" y2="150" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+    <line x1="773" y1="94" x2="720" y2="150" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- API worker -->
+    <rect x="14" y="150" width="862" height="268" rx="10" fill="#eef4fb" stroke="#1a5fa8" stroke-width="2"/>
+    <text x="30" y="174" font-weight="700" fill="#1a5fa8">CLOUDFLARE WORKER — onam-flowers-api (TypeScript)</text>
+    <text x="30" y="190" font-size="10" fill="#3a5a80">Edge runtime · stateless · regex router · CORS · Web Crypto JWT</text>
+
+    <!-- route modules -->
+    <text x="30" y="212" font-size="10.5" font-weight="700" fill="#44506a">Route modules</text>
+    <g font-size="9.5">
+      <rect x="30"  y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="40"  y="237">auth (OTP · JWT)</text>
+      <rect x="170" y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="180" y="237">categories</text>
+      <rect x="310" y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="320" y="237">vendors</text>
+      <rect x="450" y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="460" y="237">products</text>
+      <rect x="590" y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="600" y="237">coupons</text>
+      <rect x="730" y="220" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="740" y="237">orders</text>
+
+      <rect x="30"  y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="40"  y="271">reviews</text>
+      <rect x="170" y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="180" y="271">settings</text>
+      <rect x="310" y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="320" y="271">me (erasure)</text>
+      <rect x="450" y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="460" y="271">partners</text>
+      <rect x="590" y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="600" y="271">vendor console</text>
+      <rect x="730" y="254" width="130" height="26" rx="5" fill="#ffffff" stroke="#9aa3b2"/><text x="740" y="271">owner dashboard</text>
+    </g>
+
+    <!-- lib layer -->
+    <text x="30" y="310" font-size="10.5" font-weight="700" fill="#44506a">Shared lib</text>
+    <g font-size="9.5">
+      <rect x="30"  y="318" width="130" height="24" rx="5" fill="#eef4fb" stroke="#1a5fa8"/><text x="40"  y="334">pricing.ts (₹ engine)</text>
+      <rect x="170" y="318" width="130" height="24" rx="5" fill="#eef4fb" stroke="#1a5fa8"/><text x="180" y="334">geo.ts (haversine)</text>
+      <rect x="310" y="318" width="130" height="24" rx="5" fill="#eef4fb" stroke="#1a5fa8"/><text x="320" y="334">auth.ts (JWT HS256)</text>
+      <rect x="450" y="318" width="130" height="24" rx="5" fill="#eef4fb" stroke="#1a5fa8"/><text x="460" y="334">http.ts (json/err)</text>
+      <rect x="590" y="318" width="130" height="24" rx="5" fill="#eef4fb" stroke="#1a5fa8"/><text x="600" y="334">id.ts (uuid/code)</text>
+    </g>
+
+    <!-- env note -->
+    <text x="30" y="372" font-size="9.5" fill="#5a6270">Env bindings: <tspan fill="#1a5fa8">DB → D1</tspan> · JWT_SECRET (secret) · (R2 planned, blocked on account)</text>
+    <text x="30" y="388" font-size="9.5" fill="#5a6270">Migrations: 0001…0007 · seed data: 5 categories, 3 vendors, 8 products</text>
+
+    <!-- arrow api -> data -->
+    <line x1="450" y1="418" x2="450" y2="452" stroke="#1a5fa8" stroke-width="2" marker-end="url(#arr)"/>
+
+    <!-- Data -->
+    <text x="14" y="476" font-size="12" font-weight="700" fill="#23742f">DATA</text>
+    <rect x="14" y="486" width="430" height="86" rx="10" fill="#e3f3e5" stroke="#3fa34d" stroke-width="2"/>
+    <text x="30" y="510" font-weight="700" fill="#23742f">Cloudflare D1 — onam-flowers-db</text>
+    <text x="30" y="526" font-size="10" fill="#2f5c38">Serverless SQLite (APAC) · 13 tables · SQL migrations</text>
+    <text x="30" y="542" font-size="9.5" fill="#3f6a48">users · vendors · products · orders · partners · partner_locations</text>
+    <text x="30" y="556" font-size="9.5" fill="#3f6a48">reviews · coupons · settlements · categories · addresses · otp_codes · settings</text>
+
+    <!-- External services -->
+    <rect x="464" y="486" width="412" height="86" rx="10" fill="#f6f2ea" stroke="#9aa3b2" stroke-width="1.5"/>
+    <text x="480" y="510" font-weight="700" fill="#5a6270">External services</text>
+    <text x="480" y="526" font-size="9.5" fill="#6a7280">OSM tile server — tile.openstreetmap.org</text>
+    <text x="480" y="542" font-size="9.5" fill="#6a7280">OSRM router — router.project-osrm.org</text>
+    <text x="480" y="556" font-size="9.5" fill="#6a7280">Leaflet CDN (admin map) · unpkg.com</text>
+
+    <!-- arrows to external -->
+    <line x1="452" y1="240" x2="464" y2="240" stroke="#9aa3b2" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="452" y1="330" x2="464" y2="330" stroke="#9aa3b2" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="756" y="236" font-size="8.5" fill="#9aa3b2">tiles / routes (apps)</text>
+  </svg>
+  <figcaption>Figure 1 — System architecture. Four client surfaces converge on one Cloudflare Worker, which owns all data access via D1.</figcaption>
+  </figure>
+
+  <!-- ===================== 3. TECH STACK ===================== -->
+  <h2><span class="num">3.</span>Technology Stack</h2>
+
+  <h3>3.1 Backend — Cloudflare Workers</h3>
+  <table>
+    <tr><th style="width:32%">Component</th><th style="width:30%">Technology</th><th>Notes</th></tr>
+    <tr><td class="td-title">Runtime</td><td>Cloudflare Workers</td><td>Serverless edge functions, V8 isolates, zero cold-start to speak of, deployed via Wrangler.</td></tr>
+    <tr><td class="td-title">Language</td><td>TypeScript</td><td>Strictly typed; <code>tsc --noEmit</code> gate before every deploy.</td></tr>
+    <tr><td class="td-title">Database</td><td>Cloudflare D1</td><td>Serverless SQLite at the edge; SQL migrations via <code>wrangler d1 execute</code>.</td></tr>
+    <tr><td class="td-title">Router</td><td>Custom regex router</td><td>A <code>method + regex</code> dispatch table in <code>src/index.ts</code> — no framework dependency.</td></tr>
+    <tr><td class="td-title">Auth</td><td>JWT (HS256)</td><td>Signed with Web Crypto API; <code>role</code> claim separates customer / partner / vendor / owner.</td></tr>
+    <tr><td class="td-title">OTP</td><td>Phone OTP (dev)</td><td>Codes persisted in <code>otp_codes</code> and returned in the response for dev; SMS provider to be wired for production.</td></tr>
+    <tr><td class="td-title">Object storage</td><td>R2 (planned)</td><td>Not yet enabled on the account; images currently use an <code>image_url</code> TEXT field.</td></tr>
+    <tr><td class="td-title">CLI / deploy</td><td>Wrangler 4.x</td><td><code>wrangler deploy</code>, <code>wrangler d1 execute</code>, <code>wrangler pages deploy</code>.</td></tr>
+  </table>
+
+  <h3>3.2 Admin console — Cloudflare Pages</h3>
+  <table>
+    <tr><th style="width:32%">Component</th><th style="width:30%">Technology</th><th>Notes</th></tr>
+    <tr><td class="td-title">Hosting</td><td>Cloudflare Pages</td><td>Single static <code>index.html</code> (no build step) deployed with Wrangler.</td></tr>
+    <tr><td class="td-title">Frontend</td><td>Vanilla HTML / CSS / JS</td><td>Role-gated SPA — vendor console + owner dashboard in one file.</td></tr>
+    <tr><td class="td-title">Maps</td><td>Leaflet 1.9.4</td><td>Ops map with OpenStreetMap tiles (vendors + online partners).</td></tr>
+    <tr><td class="td-title">Auth</td><td>Reuses Worker JWT</td><td>Token in <code>localStorage</code>; role chosen at login, sent as <code>Bearer</code>.</td></tr>
+  </table>
+
+  <h3>3.3 Customer app — Flutter</h3>
+  <table>
+    <tr><th style="width:32%">Component</th><th style="width:30%">Technology</th><th>Notes</th></tr>
+    <tr><td class="td-title">Framework</td><td>Flutter 3.47.1 / Dart 3.13.1</td><td>Targets Android APK + Web; Material 3.</td></tr>
+    <tr><td class="td-title">State</td><td>flutter_riverpod 3.4</td><td><code>Notifier</code> / <code>FutureProvider</code> / <code>family</code> for catalog &amp; auth.</td></tr>
+    <tr><td class="td-title">Routing</td><td>go_router 18</td><td>Declarative routes + <code>StatefulShellRoute</code> bottom-nav shell.</td></tr>
+    <tr><td class="td-title">HTTP</td><td>dio 5.11</td><td>Bearer-token interceptor + typed API client.</td></tr>
+    <tr><td class="td-title">Persistence</td><td>shared_preferences 2.5</td><td>JWT + profile persistence.</td></tr>
+    <tr><td class="td-title">Maps</td><td>flutter_map 8.3 + latlong2</td><td>OSM tiles + OSRM route polyline for live order tracking.</td></tr>
+    <tr><td class="td-title">Payments</td><td>url_launcher</td><td>UPI deep-link intent (<code>upi://pay…</code>) when the owner&rsquo;s VPA is configured.</td></tr>
+    <tr><td class="td-title">UI</td><td>Neumorphism theme</td><td>Custom soft-UI design tokens (<code>core/theme.dart</code>).</td></tr>
+  </table>
+
+  <h3>3.4 Delivery partner app — Flutter</h3>
+  <table>
+    <tr><th style="width:32%">Component</th><th style="width:30%">Technology</th><th>Notes</th></tr>
+    <tr><td class="td-title">Framework</td><td>Flutter 3.47.1 / Dart 3.13.1</td><td>Android-only build (no web/Windows).</td></tr>
+    <tr><td class="td-title">Everything above</td><td>Riverpod · go_router · dio · shared_preferences · flutter_map</td><td>Same stack as the customer app.</td></tr>
+    <tr><td class="td-title">Location</td><td>geolocator 14</td><td>GPS permission + live position stream (10&nbsp;m filter) → breadcrumbs to the API.</td></tr>
+    <tr><td class="td-title">Routing</td><td>OSRM (driving)</td><td>Pickup→drop route geometry + distance + ETA.</td></tr>
+  </table>
+
+  <h3>3.5 Toolchain</h3>
+  <table>
+    <tr><th style="width:32%">Tool</th><th style="width:30%">Version</th><th>Role</th></tr>
+    <tr><td class="td-title">Flutter / Dart</td><td>3.47.1 / 3.13.1</td><td>Both apps.</td></tr>
+    <tr><td class="td-title">Node.js</td><td>v24 LTS (active) · v26 via fnm</td><td>Wrangler + build scripts.</td></tr>
+    <tr><td class="td-title">Wrangler</td><td>4.x</td><td>Worker + Pages + D1 deploys.</td></tr>
+    <tr><td class="td-title">Android toolchain</td><td>AGP 9.1.0 · Kotlin 2.4.0 · Gradle 9.3.1</td><td>APK builds (Kotlin DSL).</td></tr>
+    <tr><td class="td-title">VCS</td><td>Git + GitHub</td><td>Monorepo <code>onam-flutter</code>, main branch.</td></tr>
+  </table>
+
+  <!-- ===================== 4. DATA MODEL ===================== -->
+  <h2><span class="num">4.</span>Data Model (D1)</h2>
+  <p>Thirteen tables, seven migrations. Identity is phone-based; ids are UUIDv4 or short human-readable codes.</p>
+  <table>
+    <tr><th style="width:22%">Table</th><th>Purpose</th><th style="width:38%">Key columns</th></tr>
+    <tr><td class="td-title">users</td><td>Customers</td><td>id, phone (unique), name, consented_at, consent_version</td></tr>
+    <tr><td class="td-title">addresses</td><td>Saved delivery addresses</td><td>id, user_id, label, line1, lat, lng</td></tr>
+    <tr><td class="td-title">vendors</td><td>Flower shops</td><td>id, name, phone, lat/lng, radius_km, is_open, has_own_delivery, rating, rating_count</td></tr>
+    <tr><td class="td-title">categories</td><td>Product categories</td><td>id, name_en, name_ml, sort_order</td></tr>
+    <tr><td class="td-title">products</td><td>Catalog items</td><td>id, vendor_id, category_id, name_en/ml, unit, price, stock, occasion, hidden</td></tr>
+    <tr><td class="td-title">partners</td><td>Delivery fleet</td><td>id, phone, name, vehicle, kyc_status, is_online, current_lat/lng</td></tr>
+    <tr><td class="td-title">partner_locations</td><td>GPS breadcrumbs</td><td>partner_id, lat, lng, ts</td></tr>
+    <tr><td class="td-title">orders</td><td>Transactions</td><td>id, user_id, vendor_id, partner_id, status, items(JSON), subtotal, delivery_fee, delivery_pay, platform_fee, vendor_payout, total, delivery_type, distance_km, pickup/drop coords, otp</td></tr>
+    <tr><td class="td-title">reviews</td><td>Ratings</td><td>id, order_id, vendor_id, user_id, rating, comment</td></tr>
+    <tr><td class="td-title">coupons</td><td>Discount codes</td><td>id, code, type, value, phone, used</td></tr>
+    <tr><td class="td-title">settlements</td><td>Vendor payout ledger</td><td>id, vendor_id, order_id, amount, status</td></tr>
+    <tr><td class="td-title">otp_codes</td><td>Login codes</td><td>phone, code, expires_at, used</td></tr>
+    <tr><td class="td-title">settings</td><td>Config / economics</td><td>key, value (rates, owner_phone, upi_id, grievance officer)</td></tr>
+  </table>
+
+  <!-- ===================== 5. AUTH ===================== -->
+  <h2><span class="num">5.</span>Authentication &amp; Authorization</h2>
+  <p>All four roles authenticate with <b>phone + one-time password</b>, then receive a JWT (HS256, 30-day expiry)
+  carrying a <code>role</code> claim and the actor&rsquo;s id in <code>sub</code>. Consent (DPDP Act 2023) is
+  mandatory and recorded on login.</p>
+  <table>
+    <tr><th style="width:20%">Role</th><th style="width:22%">JWT claim</th><th style="width:20%">Login endpoint</th><th>Access</th></tr>
+    <tr><td class="td-title">Customer</td><td><code>sub = user id</code></td><td><code>/api/auth/*</code></td><td>Own orders, reviews, tracking, erasure.</td></tr>
+    <tr><td class="td-title">Partner</td><td><code>role = "partner"</code></td><td><code>/api/partner/*</code></td><td>Own profile, order discovery/claim/fulfilment, earnings.</td></tr>
+    <tr><td class="td-title">Vendor</td><td><code>role = "vendor"</code></td><td><code>/api/vendor/*</code></td><td>Own catalog (price/stock), own orders, shop toggles.</td></tr>
+    <tr><td class="td-title">Owner</td><td><code>role = "owner"</code></td><td><code>/api/owner/*</code></td><td>Everything: any vendor&rsquo;s catalog, analytics, settlements, approvals, settings.</td></tr>
+  </table>
+  <p>Role isolation is enforced server-side by four guards — <code>requireAuth</code>, <code>requirePartner</code>,
+  <code>requireVendor</code>, <code>requireOwner</code> — each rejecting tokens with the wrong <code>role</code>.
+  A vendor can edit only their own products (ownership check returns 404 otherwise); a customer or partner token
+  is rejected with 401 on any admin endpoint.</p>
+
+  <!-- ===================== 6. ECONOMICS ===================== -->
+  <h2><span class="num">6.</span>Economics &amp; Pricing Engine</h2>
+  <p>Every order&rsquo;s money is computed in <code>lib/pricing.ts</code> from rates stored in the
+  <code>settings</code> table — so the owner can retune the whole platform without a redeploy. Rates derive from
+  the fuel constraint: <b>₹116/litre ÷ 20 km/litre = ₹5.80/km</b>, so partner pay must always clear that.</p>
+  <table>
+    <tr><th style="width:30%">Setting</th><th style="width:16%">Default</th><th>Meaning</th></tr>
+    <tr><td class="td-title">platform_fee</td><td>₹20</td><td>Flat developer profit on every order (guaranteed).</td></tr>
+    <tr><td class="td-title">delivery_base_fee</td><td>₹40</td><td>Customer delivery base charge.</td></tr>
+    <tr><td class="td-title">delivery_rate_per_km</td><td>₹15</td><td>Customer delivery charge per km.</td></tr>
+    <tr><td class="td-title">partner_base_pay</td><td>₹30</td><td>Partner base earnings.</td></tr>
+    <tr><td class="td-title">partner_rate_per_km</td><td>₹10</td><td>Partner earnings per km (beats ₹5.80 fuel → ≈₹4.2/km net).</td></tr>
+    <tr><td class="td-title">fuel_cost_per_km</td><td>₹5.80</td><td>Reference for the above invariant.</td></tr>
+  </table>
+  <p>Per order (platform delivery): <code>total = subtotal + delivery_fee + platform_fee</code>; the vendor keeps
+  <code>subtotal</code>, the partner earns <code>delivery_pay</code>, and the platform keeps
+  <code>platform_fee + (delivery_fee − delivery_pay)</code>. On vendor self-delivery, <code>delivery_pay = 0</code>
+  but the ₹20 platform fee still applies.</p>
+
+  <!-- ===================== 7. ORDER LIFECYCLE ===================== -->
+  <h2><span class="num">7.</span>Order Lifecycle &amp; Data Flow</h2>
+  <p>An order moves through a linear fulfilment ladder, with a handover OTP at the final step.</p>
+  <figure>
+  <svg viewBox="0 0 900 130" width="100%" xmlns="http://www.w3.org/2000/svg" font-size="11">
+    <defs><marker id="arr2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#9aa3b2"/></marker></defs>
+    <g>
+      <rect x="8"   y="30" width="112" height="52" rx="8" fill="#fde8ee" stroke="#d94f70"/><text x="24" y="50" font-weight="700" fill="#b03a57">1. placed</text><text x="24" y="66" font-size="9" fill="#7a4756">customer orders (COD)</text>
+      <rect x="152" y="30" width="112" height="52" rx="8" fill="#e3f3e5" stroke="#3fa34d"/><text x="168" y="50" font-weight="700" fill="#23742f">2. accepted</text><text x="168" y="66" font-size="9" fill="#2f5c38">partner claims</text>
+      <rect x="296" y="30" width="112" height="52" rx="8" fill="#e3f3e5" stroke="#3fa34d"/><text x="312" y="50" font-weight="700" fill="#23742f">3. picked_up</text><text x="312" y="66" font-size="9" fill="#2f5c38">at the vendor</text>
+      <rect x="440" y="30" width="124" height="52" rx="8" fill="#e3edfb" stroke="#1a5fa8"/><text x="456" y="50" font-weight="700" fill="#1a5fa8">4. out_for_delivery</text><text x="456" y="66" font-size="9" fill="#3a5a80">GPS breadcrumbs stream</text>
+      <rect x="596" y="30" width="124" height="52" rx="8" fill="#e3edfb" stroke="#1a5fa8"/><text x="612" y="50" font-weight="700" fill="#1a5fa8">5. delivered</text><text x="612" y="66" font-size="9" fill="#3a5a80">handover OTP verified</text>
+      <rect x="752" y="30" width="124" height="52" rx="8" fill="#fbf0d5" stroke="#c99a2e"/><text x="768" y="50" font-weight="700" fill="#8a6200">6. reviewed</text><text x="768" y="66" font-size="9" fill="#7a6a3d">rating → vendor</text>
+      <line x1="120" y1="56" x2="150" y2="56" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="264" y1="56" x2="294" y2="56" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="408" y1="56" x2="438" y2="56" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="564" y1="56" x2="594" y2="56" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <line x1="720" y1="56" x2="750" y2="56" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <text x="8" y="108" font-size="9" fill="#5a6270">Stock decremented &amp; money computed at placement · partner&rsquo;s live position surfaced to the customer at /track · duplicate accept &amp; wrong OTP rejected server-side.</text>
+    </g>
+  </svg>
+  <figcaption>Figure 2 — Order lifecycle, from placement to review.</figcaption>
+  </figure>
+
+  <h3>7.1 End-to-end flow</h3>
+  <ol>
+    <li><b>Browse</b> — the customer app fetches vendors (distance/radius-filtered) and products from the Worker.</li>
+    <li><b>Order</b> — <code>POST /api/orders</code> validates stock, computes the ₹ breakdown, decrements stock, and stores the handover OTP.</li>
+    <li><b>Assign</b> — a partner sees the order in <code>/api/partner/orders/available</code> and atomically claims it.</li>
+    <li><b>Track</b> — the partner streams GPS to <code>/api/partner/me</code>; the customer polls <code>/api/orders/:id/track</code> (5&nbsp;s) to watch the partner move.</li>
+    <li><b>Deliver</b> — the partner enters the customer&rsquo;s OTP to complete the delivery.</li>
+    <li><b>Review</b> — the customer rates the order; the rating rolls into the vendor&rsquo;s average.</li>
+    <li><b>Observe</b> — the owner dashboard reflects revenue, platform profit, partner earnings, and per-vendor settlements in real time.</li>
+  </ol>
+
+  <!-- ===================== 8. API SURFACE ===================== -->
+  <h2><span class="num">8.</span>API Surface</h2>
+  <p>All endpoints return JSON with CORS enabled. Grouped by consumer.</p>
+  <table>
+    <tr><th style="width:22%">Group</th><th>Endpoints</th></tr>
+    <tr><td class="td-title">Health / settings</td><td><code>GET /health</code> · <code>GET /api/settings</code></td></tr>
+    <tr><td class="td-title">Catalog (public)</td><td><code>GET /api/categories</code> · <code>GET /api/vendors</code> · <code>GET /api/vendors/:id</code> · <code>GET /api/vendors/:id/products</code> · <code>GET /api/vendors/:id/reviews</code> · <code>GET /api/products</code></td></tr>
+    <tr><td class="td-title">Customer auth</td><td><code>POST /api/auth/otp</code> · <code>POST /api/auth/verify</code> · <code>DELETE /api/me</code></td></tr>
+    <tr><td class="td-title">Customer orders</td><td><code>POST /api/orders</code> · <code>GET /api/orders</code> · <code>GET /api/orders/:id</code> · <code>GET /api/orders/:id/track</code> · <code>POST /api/orders/:id/review</code></td></tr>
+    <tr><td class="td-title">Coupons</td><td><code>POST /api/coupons</code> · <code>POST /api/coupons/validate</code></td></tr>
+    <tr><td class="td-title">Partner</td><td><code>POST /api/partner/otp|verify</code> · <code>GET|PATCH /api/partner/me</code> · <code>GET /api/partner/orders[/available]</code> · <code>POST /api/partner/orders/:id/accept|status</code></td></tr>
+    <tr><td class="td-title">Vendor console</td><td><code>POST /api/vendor/otp|verify</code> · <code>GET|PATCH /api/vendor/me</code> · <code>GET|POST /api/vendor/products</code> · <code>PATCH /api/vendor/products/:id</code> · <code>GET /api/vendor/orders</code></td></tr>
+    <tr><td class="td-title">Owner dashboard</td><td><code>POST /api/owner/otp|verify</code> · <code>GET /api/owner/overview</code> · <code>GET|POST /api/owner/vendors</code> · <code>PATCH /api/owner/vendors/:id</code> · <code>GET|POST /api/owner/vendors/:id/products</code> · <code>PATCH /api/owner/products/:id</code> · <code>GET /api/owner/orders|partners|settlements|settings</code> · <code>PATCH /api/owner/partners/:id|settings</code></td></tr>
+  </table>
+
+  <!-- ===================== 9. COMPLIANCE ===================== -->
+  <h2><span class="num">9.</span>Compliance (Indian regulations)</h2>
+  <h3>DPDP Act 2023</h3>
+  <ul>
+    <li><b>Explicit, recorded consent</b> — every login (customer, partner, vendor, owner) requires a consent checkbox; the API records <code>consented_at</code> + <code>consent_version</code> and refuses (400) without it.</li>
+    <li><b>Right to erasure</b> — <code>DELETE /api/me</code> anonymizes the user&rsquo;s personal data and deletes addresses.</li>
+    <li><b>Grievance officer</b> — published in <code>/api/settings</code> and shown in the customer app.</li>
+    <li><b>Purpose limitation</b> — partner/vendor consent text states exactly what data is processed (name, phone, location) and why.</li>
+  </ul>
+  <h3>Consumer Protection (E-Commerce) Rules 2020</h3>
+  <ul>
+    <li><b>Transparent pricing</b> — item price, delivery fee, and the ₹20 platform fee are itemized at checkout and in the order history.</li>
+    <li><b>COD-first</b> — cash on delivery is the default payment method; UPI is an optional extra.</li>
+  </ul>
+
+  <!-- ===================== 10. DEPLOYMENT ===================== -->
+  <h2><span class="num">10.</span>Deployment Topology</h2>
+  <table>
+    <tr><th style="width:34%">Artifact</th><th style="width:30%">Where</th><th>Notes</th></tr>
+    <tr><td class="td-title">Backend API</td><td><code>onam-flowers-api.aanandab44.workers.dev</code></td><td>Cloudflare Worker; every commit → <code>wrangler deploy</code>.</td></tr>
+    <tr><td class="td-title">Database</td><td>D1 <code>onam-flowers-db</code></td><td>APAC region; SQL migrations applied via Wrangler.</td></tr>
+    <tr><td class="td-title">Admin console</td><td><code>onam-flowers-admin.pages.dev</code></td><td>Cloudflare Pages (<code>wrangler pages deploy</code>).</td></tr>
+    <tr><td class="td-title">Customer app</td><td>Flutter build</td><td>Android APK + web build (no store distribution yet).</td></tr>
+    <tr><td class="td-title">Partner app</td><td>Flutter build</td><td>Android APK (debug builds verified).</td></tr>
+    <tr><td class="td-title">Source</td><td>github.com/AanandAB/OnamDelivery</td><td>Monorepo; main branch.</td></tr>
+  </table>
+
+  <h3>Repository layout</h3>
+  <pre><code>onam-flutter/
+├── apps/
+│   ├── customer_app/     # Flutter — Android + web
+│   └── delivery_app/     # Flutter — Android only
+├── backend/
+│   ├── worker/           # Cloudflare Worker (TypeScript)
+│   │   ├── migrations/   # 0001…0007 SQL
+│   │   ├── seed.sql
+│   │   └── src/
+│   │       ├── index.ts          # router
+│   │       ├── env.ts            # bindings
+│   │       ├── lib/              # pricing, geo, auth (JWT), http, id
+│   │       └── routes/           # auth, categories, vendors, products, coupons,
+│   │                             # orders, reviews, settings, me, partners, vendor, owner
+│   └── admin/            # Cloudflare Pages — index.html (vendor + owner console)
+└── docs/                 # PLAN.md, API.md, ARCHITECTURE.*</code></pre>
+
+  <!-- ===================== 11. ROADMAP ===================== -->
+  <h2><span class="num">11.</span>Current State &amp; Production Roadmap</h2>
+  <div class="warn"><b>Shipped &amp; verified</b> — all four surfaces; 4-role auth; full economics; DPDP compliance;
+  live tracking; reviews; UPI intent; ops map. Backend flows verified with 53+ scripted checks; both apps build clean.</div>
+  <table>
+    <tr><th style="width:34%">Item</th><th>Status / plan</th></tr>
+    <tr><td class="td-title">SMS OTP provider</td><td>Dev mode returns OTP in the response; wire an SMS gateway (MSG91 / 2Factor) before real customers.</td></tr>
+    <tr><td class="td-title">JWT secret</td><td>Dev fallback in <code>auth.ts</code>; set a real one via <code>wrangler secret put JWT_SECRET</code>.</td></tr>
+    <tr><td class="td-title">R2 image storage</td><td>Blocked — R2 not enabled on the Cloudflare account; images use <code>image_url</code> strings.</td></tr>
+    <tr><td class="td-title">UPI gateway</td><td>Intent deep-link works; add Razorpay (or an RBI-licensed aggregator) for server-verified UPI + webhooks.</td></tr>
+    <tr><td class="td-title">Map tiles / routing</td><td>Public OSM tiles + OSRM demo server are fine for dev; self-host or license for production scale.</td></tr>
+    <tr><td class="td-title">Push notifications</td><td>Not yet integrated; needs FCM/OneSignal + server credentials.</td></tr>
+    <tr><td class="td-title">App store distribution</td><td>APK/web builds exist; signing + Play Store listing pending.</td></tr>
+  </table>
+
+  <footer class="doc">
+    OnamDelivery — Technical Architecture &amp; Technology Stack · generated from the live codebase (commit history on
+    github.com/AanandAB/OnamDelivery). Figures are schematic and reflect the implemented system.
+  </footer>
+
+</div>
+</body>
+</html>
