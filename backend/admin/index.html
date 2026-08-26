@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Onam Flowers — Vendor Console</title>
+<title>Onam Flowers — Admin</title>
 <style>
   :root {
     --rose: #d94f70;
@@ -25,119 +25,81 @@
   .hidden { display: none !important; }
 
   /* ---- Login ---- */
-  #login {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-  }
+  #login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
   .login-card {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 40px 32px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 12px 40px rgba(43, 43, 43, 0.08);
+    background: var(--card); border-radius: 20px; padding: 40px 32px;
+    width: 100%; max-width: 420px; box-shadow: 0 12px 40px rgba(43,43,43,0.08);
   }
   .login-card .logo { font-size: 40px; text-align: center; }
   .login-card h1 { font-size: 1.4rem; margin: 12px 0 2px; text-align: center; }
-  .login-card .sub { color: var(--muted); text-align: center; font-size: 0.9rem; margin-bottom: 24px; }
+  .login-card .sub { color: var(--muted); text-align: center; font-size: 0.9rem; margin-bottom: 20px; }
 
-  label { display: block; font-size: 0.82rem; font-weight: 600; margin: 14px 0 6px; color: var(--ink); }
+  .roleToggle { display: flex; gap: 6px; background: #efe7d9; padding: 5px; border-radius: 12px; margin-bottom: 8px; }
+  .roleToggle button { flex: 1; padding: 10px; border: none; border-radius: 9px; background: transparent; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .roleToggle button.active { background: var(--card); color: var(--rose); box-shadow: 0 2px 8px rgba(43,43,43,0.08); }
+
+  label { display: block; font-size: 0.82rem; font-weight: 600; margin: 14px 0 6px; }
   input, select {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1.5px solid var(--line);
-    border-radius: 12px;
-    font-size: 1rem;
-    background: #fff;
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--line);
+    border-radius: 12px; font-size: 1rem; background: #fff;
   }
   input:focus, select:focus { outline: none; border-color: var(--rose); }
-  .btn {
-    display: inline-block;
-    width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    color: #fff;
-    background: var(--rose);
-    margin-top: 16px;
-  }
+  .btn { display: inline-block; width: 100%; padding: 13px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; color: #fff; background: var(--rose); margin-top: 16px; }
   .btn:disabled { opacity: 0.55; cursor: not-allowed; }
   .btn.leaf { background: var(--leaf); }
   .btn.small { width: auto; padding: 9px 16px; margin: 0; font-size: 0.9rem; }
+  .btn.ghost { background: none; color: var(--muted); }
   .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 0.82rem; color: var(--muted); }
   .consent input { width: auto; margin-top: 2px; }
   .error { color: var(--rose); font-size: 0.85rem; margin-top: 12px; text-align: center; }
 
-  /* ---- Console layout ---- */
-  #app { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 0 12px;
-    gap: 12px;
-  }
+  /* ---- Console ---- */
+  #app { max-width: 960px; margin: 0 auto; padding: 0 16px 40px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 12px; gap: 12px; }
   header .brand { display: flex; align-items: center; gap: 10px; }
   header .brand .flower { font-size: 26px; }
   header .brand h1 { font-size: 1.15rem; margin: 0; }
   header .brand .shop { color: var(--muted); font-size: 0.8rem; }
+  header .roleBadge { background: #ffe9ef; color: var(--rose); font-size: 0.7rem; font-weight: 700; border-radius: 999px; padding: 4px 10px; }
   header .logout { background: none; border: 1.5px solid var(--rose); color: var(--rose); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
 
-  nav.tabs {
-    display: flex;
-    gap: 6px;
-    margin: 8px 0 20px;
-    background: #efe7d9;
-    padding: 5px;
-    border-radius: 14px;
-  }
-  nav.tabs button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    background: transparent;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 0.92rem;
-  }
+  nav.tabs { display: flex; gap: 4px; margin: 8px 0 20px; background: #efe7d9; padding: 5px; border-radius: 14px; overflow-x: auto; }
+  nav.tabs button { flex: 1; min-width: 0; padding: 10px 8px; border: none; border-radius: 10px; background: transparent; font-weight: 600; color: var(--muted); cursor: pointer; font-size: 0.88rem; white-space: nowrap; }
   nav.tabs button.active { background: var(--card); color: var(--rose); box-shadow: 0 2px 8px rgba(43,43,43,0.08); }
 
-  .card {
-    background: var(--card);
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: 0 8px 30px rgba(43,43,43,0.06);
-    margin-bottom: 16px;
-  }
+  .card { background: var(--card); border-radius: 18px; padding: 20px; box-shadow: 0 8px 30px rgba(43,43,43,0.06); margin-bottom: 16px; }
   .card h2 { margin: 0 0 4px; font-size: 1.05rem; }
   .card .hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
 
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 8px 30px rgba(43,43,43,0.05); }
+  .stat .v { font-size: 1.5rem; font-weight: 800; }
+  .stat .l { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+  .stat.money .v { color: var(--leaf); }
+
   table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); padding: 8px 6px; border-bottom: 1.5px solid var(--line); }
-  td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); padding: 8px 6px; border-bottom: 1.5px solid var(--line); }
+  td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 0.9rem; }
   tr:last-child td { border-bottom: none; }
-  td input { width: 90px; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 0.92rem; }
+  td input { width: 90px; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 0.9rem; }
   td input:focus { border-color: var(--leaf); }
   .prod-name { font-weight: 600; }
   .prod-unit { color: var(--muted); font-size: 0.8rem; }
   .hidden-row td { opacity: 0.45; }
+  .rowlink { color: var(--rose); font-weight: 600; cursor: pointer; background: none; border: none; padding: 0; font-size: 0.88rem; }
+  .mini { padding: 6px 12px; border-radius: 9px; border: 1.5px solid var(--leaf); color: var(--leaf); background: #fff; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
+
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+  .badge.placed, .badge.accepted, .badge.preparing { background: #fff3d6; color: #9a6b00; }
+  .badge.picked_up, .badge.out_for_delivery { background: #dff0ff; color: #1a5fa8; }
+  .badge.delivered, .badge.verified { background: #e2f5e4; color: #22722a; }
+  .badge.cancelled { background: #ffe2e2; color: #b02a2a; }
+  .badge.pending { background: #ffe9ef; color: #b02a6a; }
 
   .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
   .toggle input { display: none; }
-  .toggle .slider {
-    position: absolute; inset: 0; border-radius: 999px; background: #d8d2c6; cursor: pointer; transition: 0.2s;
-  }
-  .toggle .slider::before {
-    content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%;
-    background: #fff; top: 3px; left: 3px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-  }
+  .toggle .slider { position: absolute; inset: 0; border-radius: 999px; background: #d8d2c6; cursor: pointer; transition: 0.2s; }
+  .toggle .slider::before { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
   .toggle input:checked + .slider { background: var(--leaf); }
   .toggle input:checked + .slider::before { transform: translateX(20px); }
 
@@ -145,33 +107,21 @@
   .setting-row:last-child { border-bottom: none; }
   .setting-row .meta b { display: block; }
   .setting-row .meta span { color: var(--muted); font-size: 0.82rem; }
+  .setting-row input[type=number] { width: 90px; padding: 8px; }
 
-  .order { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
-  .order .top { display: flex; justify-content: space-between; align-items: center; }
-  .order .oid { font-weight: 700; font-size: 0.95rem; }
-  .order .items { color: var(--muted); font-size: 0.88rem; margin: 6px 0; }
-  .order .money { font-weight: 600; font-size: 0.92rem; }
-  .badge { padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
-  .badge.placed, .badge.accepted { background: #fff3d6; color: #9a6b00; }
-  .badge.picked_up, .badge.out_for_delivery { background: #dff0ff; color: #1a5fa8; }
-  .badge.delivered { background: #e2f5e4; color: #22722a; }
-  .badge.cancelled { background: #ffe2e2; color: #b02a2a; }
+  .subview-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .subview-head button { background: none; border: 1.5px solid var(--line); border-radius: 9px; padding: 7px 12px; cursor: pointer; font-weight: 600; color: var(--ink); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .grid2 .full { grid-column: 1 / -1; }
   .empty { text-align: center; color: var(--muted); padding: 32px 0; }
 
-  /* Add-product form */
-  #addForm .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
-  #addForm .grid .full { grid-column: 1 / -1; }
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 12px;
-    font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.25s;
-    z-index: 50;
-  }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 12px; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 50; }
   .toast.show { opacity: 1; }
 
   @media (max-width: 560px) {
-    #addForm .grid { grid-template-columns: 1fr; }
-    td input { width: 72px; }
+    .grid2 { grid-template-columns: 1fr; }
+    td input { width: 68px; }
   }
 </style>
 </head>
@@ -181,11 +131,16 @@
   <div id="login">
     <div class="login-card">
       <div class="logo">💐</div>
-      <h1>Vendor Console</h1>
-      <div class="sub">Onam Flowers — manage your shop in a few taps</div>
+      <h1>Onam Flowers Admin</h1>
+      <div class="sub">Vendor console + owner dashboard</div>
+
+      <div class="roleToggle">
+        <button id="roleVendor" class="active">Vendor</button>
+        <button id="roleOwner">Owner</button>
+      </div>
 
       <div id="loginStep1">
-        <label>Shop phone number</label>
+        <label id="phoneLabel">Shop phone number</label>
         <input id="phone" type="tel" placeholder="10-digit number" maxlength="10" />
         <button class="btn" id="sendOtp">Send OTP</button>
       </div>
@@ -195,10 +150,10 @@
         <input id="code" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" />
         <label class="consent">
           <input type="checkbox" id="consent" />
-          <span>I agree to the privacy policy — my shop details (name, phone, location) are processed to run this store (DPDP Act 2023).</span>
+          <span>I agree to the privacy policy — my details are processed to run this platform (DPDP Act 2023).</span>
         </label>
         <button class="btn leaf" id="verify">Sign in</button>
-        <button class="btn small" id="backToPhone" style="background:none;color:var(--muted);margin-top:8px;">Change phone</button>
+        <button class="btn ghost" id="backToPhone">Change phone</button>
       </div>
 
       <div class="error" id="loginError"></div>
@@ -211,43 +166,44 @@
       <div class="brand">
         <span class="flower">💐</span>
         <div>
-          <h1>Vendor Console</h1>
+          <h1 id="appTitle">Console</h1>
           <span class="shop" id="shopName"></span>
         </div>
+        <span class="roleBadge" id="roleBadge"></span>
       </div>
       <button class="logout" id="logout">Log out</button>
     </header>
 
-    <nav class="tabs">
+    <nav class="tabs" id="vendorTabs">
       <button data-tab="products" class="active">Products</button>
       <button data-tab="orders">Orders</button>
       <button data-tab="settings">Settings</button>
     </nav>
 
-    <!-- Products -->
+    <nav class="tabs hidden" id="ownerTabs">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="vendors">Vendors</button>
+      <button data-tab="oorders">Orders</button>
+      <button data-tab="partners">Partners</button>
+      <button data-tab="settlements">Settlements</button>
+      <button data-tab="osettings">Settings</button>
+    </nav>
+
+    <!-- Vendor views -->
     <section id="tab-products">
       <div class="card">
         <h2>Your catalog</h2>
         <div class="hint">Edit price &amp; stock inline — changes save automatically. Hidden items aren't shown to customers.</div>
-        <table>
-          <thead><tr><th>Product</th><th>Price (₹)</th><th>Stock</th><th style="text-align:center">Visible</th></tr></thead>
-          <tbody id="productsBody"></tbody>
-        </table>
+        <table><thead><tr><th>Product</th><th>Price (₹)</th><th>Stock</th><th style="text-align:center">Visible</th></tr></thead><tbody id="productsBody"></tbody></table>
         <div class="empty hidden" id="productsEmpty">No products yet — add your first flower below.</div>
       </div>
-
-      <div class="card" id="addForm">
+      <div class="card">
         <h2>Add a product</h2>
-        <div class="hint">Fill the essentials — you can edit everything later.</div>
-        <div class="grid">
+        <div class="grid2">
           <div class="full"><label>Name (English) *</label><input id="pName" placeholder="e.g. Jasmine Garland" /></div>
           <div class="full"><label>Name (Malayalam, optional)</label><input id="pNameMl" placeholder="മുല്ല മാല" /></div>
-          <div><label>Unit *</label>
-            <select id="pUnit"><option value="piece">piece</option><option value="bunch">bunch</option><option value="kg">kg</option></select>
-          </div>
-          <div><label>Category</label>
-            <select id="pCategory"></select>
-          </div>
+          <div><label>Unit *</label><select id="pUnit"><option value="piece">piece</option><option value="bunch">bunch</option><option value="kg">kg</option></select></div>
+          <div><label>Category</label><select id="pCategory"></select></div>
           <div><label>Price (₹) *</label><input id="pPrice" type="number" min="0" step="1" placeholder="0" /></div>
           <div><label>Stock</label><input id="pStock" type="number" min="0" step="1" placeholder="0" /></div>
           <div class="full"><label>Occasion (optional)</label><input id="pOccasion" placeholder="onam / wedding / birthday / puja" /></div>
@@ -255,33 +211,71 @@
         <button class="btn" id="addProduct">Add product</button>
       </div>
     </section>
-
-    <!-- Orders -->
     <section id="tab-orders" class="hidden">
-      <div class="card">
-        <h2>Order queue</h2>
-        <div class="hint">Incoming orders for your shop, newest first.</div>
-        <div id="ordersBody"></div>
-        <div class="empty hidden" id="ordersEmpty">No orders yet.</div>
-      </div>
+      <div class="card"><h2>Order queue</h2><div class="hint">Incoming orders for your shop, newest first.</div><div id="ordersBody"></div><div class="empty hidden" id="ordersEmpty">No orders yet.</div></div>
     </section>
-
-    <!-- Settings -->
     <section id="tab-settings" class="hidden">
       <div class="card">
         <h2>Shop settings</h2>
-        <div class="setting-row">
-          <div class="meta"><b>Open for orders</b><span>Customers can order while you're open</span></div>
-          <label class="toggle"><input type="checkbox" id="setOpen" /><span class="slider"></span></label>
+        <div class="setting-row"><div class="meta"><b>Open for orders</b><span>Customers can order while you're open</span></div><label class="toggle"><input type="checkbox" id="setOpen" /><span class="slider"></span></label></div>
+        <div class="setting-row"><div class="meta"><b>Use my own delivery boy</b><span>Off = OnamDelivery assigns a partner</span></div><label class="toggle"><input type="checkbox" id="setOwnDelivery" /><span class="slider"></span></label></div>
+        <div class="setting-row"><div class="meta"><b>Delivery radius (km)</b></div><input id="setRadius" type="number" min="1" max="50" step="1" /></div>
+      </div>
+    </section>
+
+    <!-- Owner views -->
+    <section id="tab-overview" class="hidden">
+      <div class="stats" id="overviewStats"></div>
+      <div class="card"><h2>Recent orders</h2><div id="overviewRecent"></div></div>
+    </section>
+    <section id="tab-vendors" class="hidden">
+      <div class="card">
+        <h2>Vendors</h2><div class="hint">All shops. Click a shop to manage its catalog.</div>
+        <div id="vendorsBody"></div>
+      </div>
+      <div class="card">
+        <h2>Add vendor</h2>
+        <div class="grid2">
+          <div class="full"><label>Shop name *</label><input id="nvName" /></div>
+          <div class="full"><label>Phone</label><input id="nvPhone" type="tel" maxlength="10" /></div>
+          <div><label>Latitude *</label><input id="nvLat" type="number" step="0.0001" value="11.8745" /></div>
+          <div><label>Longitude *</label><input id="nvLng" type="number" step="0.0001" value="75.3704" /></div>
+          <div class="full"><label>Delivery radius (km)</label><input id="nvRadius" type="number" min="1" max="50" value="10" /></div>
         </div>
-        <div class="setting-row">
-          <div class="meta"><b>Use my own delivery boy</b><span>Off = OnamDelivery assigns a partner; On = you deliver yourself</span></div>
-          <label class="toggle"><input type="checkbox" id="setOwnDelivery" /><span class="slider"></span></label>
+        <button class="btn" id="addVendor">Add vendor</button>
+      </div>
+    </section>
+    <section id="tab-oorders" class="hidden">
+      <div class="card"><h2>All orders</h2><div id="ownerOrdersBody"></div></div>
+    </section>
+    <section id="tab-partners" class="hidden">
+      <div class="card"><h2>Delivery partners</h2><div class="hint">Approve partners after KYC.</div><div id="partnersBody"></div></div>
+    </section>
+    <section id="tab-settlements" class="hidden">
+      <div class="card"><h2>Vendor settlements</h2><div class="hint">Amount owed to each vendor (their item revenue from non-cancelled orders).</div><div id="settlementsBody"></div></div>
+    </section>
+    <section id="tab-osettings" class="hidden">
+      <div class="card"><h2>Delivery economics</h2><div class="hint">These rates drive fees and partner pay across the whole platform.</div><div id="ownerSettingsBody"></div><button class="btn" id="saveOwnerSettings">Save changes</button></div>
+    </section>
+
+    <!-- Owner: manage a vendor's products -->
+    <section id="ownerVendorProducts" class="hidden">
+      <div class="subview-head">
+        <button id="backToVendors">← Back</button>
+        <h2 id="ovpTitle">Products</h2>
+      </div>
+      <div class="card">
+        <table><thead><tr><th>Product</th><th>Price (₹)</th><th>Stock</th><th style="text-align:center">Visible</th></tr></thead><tbody id="ovpBody"></tbody></table>
+      </div>
+      <div class="card">
+        <h2>Add a product to this shop</h2>
+        <div class="grid2">
+          <div class="full"><label>Name *</label><input id="ovpName" /></div>
+          <div><label>Unit *</label><select id="ovpUnit"><option value="piece">piece</option><option value="bunch">bunch</option><option value="kg">kg</option></select></div>
+          <div><label>Price (₹) *</label><input id="ovpPrice" type="number" min="0" /></div>
+          <div class="full"><label>Stock</label><input id="ovpStock" type="number" min="0" value="0" /></div>
         </div>
-        <div class="setting-row">
-          <div class="meta"><b>Delivery radius</b><span>How far (km) you'll deliver</span></div>
-          <input id="setRadius" type="number" min="1" max="50" step="1" style="width:80px;padding:8px;" />
-        </div>
+        <button class="btn" id="ovpAdd">Add product</button>
       </div>
     </section>
   </div>
@@ -291,27 +285,23 @@
 <script>
 const BASE = "https://onam-flowers-api.aanandab44.workers.dev";
 const CONSENT_VERSION = "1.0";
-let token = localStorage.getItem("vendor_token") || "";
-let vendor = null;
+let role = localStorage.getItem("onam_role") || "";       // "vendor" | "owner"
+let token = localStorage.getItem("onam_token") || "";
+let vendor = null;                 // vendor console profile
 let categories = [];
+let selectedVendorId = null;       // owner product editor
 
-function toast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2200);
-}
-
+function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 2200); }
+function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function formatRupees(n) {
-  const s = Math.round(n).toString();
+  const s = Math.round(Number(n) || 0).toString();
   let head = "", last3 = s;
   if (s.length > 3) { last3 = s.slice(-3); head = s.slice(0, -3); }
-  const groups = [];
-  while (head.length > 2) { groups.unshift(head.slice(-2)); head = head.slice(0, -2); }
-  if (head) groups.unshift(head);
-  return "₹" + [...groups, last3].join(",");
+  const g = [];
+  while (head.length > 2) { g.unshift(head.slice(-2)); head = head.slice(0, -2); }
+  if (head) g.unshift(head);
+  return "₹" + [...g, last3].join(",");
 }
-
 async function api(method, path, body) {
   const res = await fetch(BASE + path, {
     method,
@@ -326,12 +316,23 @@ async function api(method, path, body) {
 /* ---------- Login ---------- */
 const loginError = (m) => (document.getElementById("loginError").textContent = m);
 
+document.getElementById("roleVendor").onclick = () => setRole("vendor");
+document.getElementById("roleOwner").onclick = () => setRole("owner");
+function setRole(r) {
+  role = r;
+  document.getElementById("roleVendor").classList.toggle("active", r === "vendor");
+  document.getElementById("roleOwner").classList.toggle("active", r === "owner");
+  document.getElementById("phoneLabel").textContent = r === "owner" ? "Owner phone number" : "Shop phone number";
+  loginError("");
+}
+
 document.getElementById("sendOtp").onclick = async () => {
   const phone = document.getElementById("phone").value.trim();
   if (phone.length < 10) return loginError("Enter a valid 10-digit phone number");
   loginError("");
+  const path = role === "owner" ? "/api/owner/otp" : "/api/vendor/otp";
   try {
-    const r = await api("POST", "/api/vendor/otp", { phone });
+    const r = await api("POST", path, { phone });
     toast("OTP sent (dev code: " + r.dev_otp + ")");
     document.getElementById("loginStep1").classList.add("hidden");
     document.getElementById("loginStep2").classList.remove("hidden");
@@ -343,11 +344,13 @@ document.getElementById("verify").onclick = async () => {
   const code = document.getElementById("code").value.trim();
   if (!document.getElementById("consent").checked) return loginError("Please accept the privacy policy");
   loginError("");
+  const path = role === "owner" ? "/api/owner/verify" : "/api/vendor/verify";
   try {
-    const r = await api("POST", "/api/vendor/verify", { phone, code, consent: true, consent_version: CONSENT_VERSION });
+    const r = await api("POST", path, { phone, code, consent: true, consent_version: CONSENT_VERSION });
     token = r.token;
-    vendor = r.vendor;
-    localStorage.setItem("vendor_token", token);
+    localStorage.setItem("onam_role", role);
+    localStorage.setItem("onam_token", token);
+    vendor = r.vendor || r.owner || null;
     enterConsole();
   } catch (e) { loginError(e.message); }
 };
@@ -357,35 +360,51 @@ document.getElementById("backToPhone").onclick = () => {
   document.getElementById("loginStep1").classList.remove("hidden");
 };
 
-/* ---------- Console ---------- */
+/* ---------- Console bootstrap ---------- */
 function enterConsole() {
   document.getElementById("login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
-  document.getElementById("shopName").textContent = vendor ? vendor.name : "";
-  loadProducts();
-  loadOrders();
-  loadSettings();
-  loadCategories();
+  const isOwner = role === "owner";
+  document.getElementById("roleBadge").textContent = isOwner ? "OWNER" : "VENDOR";
+  document.getElementById("appTitle").textContent = isOwner ? "Owner dashboard" : "Vendor console";
+  document.getElementById("shopName").textContent = isOwner ? "Platform overview" : (vendor ? vendor.name : "");
+  document.getElementById("vendorTabs").classList.toggle("hidden", isOwner);
+  document.getElementById("ownerTabs").classList.toggle("hidden", !isOwner);
+
+  if (isOwner) {
+    showTab("overview");
+    loadOverview(); loadVendors(); loadOwnerOrders(); loadPartners(); loadSettlements(); loadOwnerSettings();
+  } else {
+    showTab("products");
+    loadProducts(); loadOrders(); loadSettings(); loadCategories();
+  }
 }
 
 document.getElementById("logout").onclick = () => {
-  token = ""; vendor = null;
-  localStorage.removeItem("vendor_token");
+  token = ""; role = ""; vendor = null;
+  localStorage.removeItem("onam_token"); localStorage.removeItem("onam_role");
   location.reload();
 };
 
-/* ---------- Tabs ---------- */
-document.querySelectorAll("nav.tabs button").forEach((btn) => {
-  btn.onclick = () => {
-    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    ["products", "orders", "settings"].forEach((t) =>
-      document.getElementById("tab-" + t).classList.toggle("hidden", t !== btn.dataset.tab)
-    );
-  };
+/* ---------- Tabs (generic, both navs) ---------- */
+function showTab(name) {
+  const sections = ["products","orders","settings","overview","vendors","oorders","partners","settlements","osettings"];
+  sections.forEach((s) => document.getElementById("tab-" + s).classList.add("hidden"));
+  document.getElementById("ownerVendorProducts").classList.add("hidden");
+  const el = document.getElementById("tab-" + name);
+  if (el) el.classList.remove("hidden");
+}
+document.querySelectorAll("nav.tabs").forEach((nav) => {
+  nav.querySelectorAll("button").forEach((btn) => {
+    btn.onclick = () => {
+      nav.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      showTab(btn.dataset.tab);
+    };
+  });
 });
 
-/* ---------- Products ---------- */
+/* ================= VENDOR CONSOLE ================= */
 async function loadProducts() {
   const body = document.getElementById("productsBody");
   try {
@@ -396,37 +415,30 @@ async function loadProducts() {
         <td><div class="prod-name">${escapeHtml(p.name_en)}</div><div class="prod-unit">${escapeHtml(p.unit)}${p.occasion ? " · " + escapeHtml(p.occasion) : ""}</div></td>
         <td><input type="number" min="0" step="1" value="${p.price}" data-field="price" /></td>
         <td><input type="number" min="0" step="1" value="${p.stock}" data-field="stock" /></td>
-        <td style="text-align:center">
-          <label class="toggle"><input type="checkbox" ${p.hidden ? "" : "checked"} data-field="hidden" /><span class="slider"></span></label>
-        </td>
+        <td style="text-align:center"><label class="toggle"><input type="checkbox" ${p.hidden ? "" : "checked"} data-field="hidden" /><span class="slider"></span></label></td>
       </tr>`).join("");
+    wireProductRows(body, "/api/vendor/products/");
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
 
-    body.querySelectorAll("tr[data-id]").forEach((tr) => {
-      const id = tr.dataset.id;
-      tr.querySelectorAll("input[data-field='price'], input[data-field='stock']").forEach((inp) => {
-        inp.onchange = async () => {
-          const field = inp.dataset.field;
-          const value = Number(inp.value);
-          if (Number.isNaN(value) || value < 0) { toast("Invalid value"); return; }
-          try {
-            await api("PATCH", "/api/vendor/products/" + id, { [field]: value });
-            toast("Saved " + field);
-          } catch (e) { toast(e.message); loadProducts(); }
-        };
-      });
-      tr.querySelectorAll("input[data-field='hidden']").forEach((cb) => {
-        cb.onchange = async () => {
-          try {
-            await api("PATCH", "/api/vendor/products/" + id, { hidden: cb.checked ? 0 : 1 });
-            loadProducts();
-            toast(cb.checked ? "Product visible" : "Product hidden");
-          } catch (e) { toast(e.message); }
-        };
-      });
+function wireProductRows(body, patchPrefix) {
+  body.querySelectorAll("tr[data-id]").forEach((tr) => {
+    const id = tr.dataset.id;
+    tr.querySelectorAll("input[data-field='price'], input[data-field='stock']").forEach((inp) => {
+      inp.onchange = async () => {
+        const v = Number(inp.value);
+        if (Number.isNaN(v) || v < 0) { toast("Invalid value"); return; }
+        try { await api("PATCH", patchPrefix + id, { [inp.dataset.field]: v }); toast("Saved"); }
+        catch (e) { toast(e.message); }
+      };
     });
-  } catch (e) {
-    body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
-  }
+    tr.querySelectorAll("input[data-field='hidden']").forEach((cb) => {
+      cb.onchange = async () => {
+        try { await api("PATCH", patchPrefix + id, { hidden: cb.checked ? 0 : 1 }); tr.classList.toggle("hidden-row", !cb.checked); toast(cb.checked ? "Visible" : "Hidden"); }
+        catch (e) { toast(e.message); }
+      };
+    });
+  });
 }
 
 document.getElementById("addProduct").onclick = async () => {
@@ -434,94 +446,230 @@ document.getElementById("addProduct").onclick = async () => {
   const price = Number(document.getElementById("pPrice").value);
   if (!name) return toast("Product name is required");
   if (Number.isNaN(price) || price < 0) return toast("Enter a valid price");
-  const payload = {
-    name_en: name,
-    name_ml: document.getElementById("pNameMl").value.trim() || undefined,
-    unit: document.getElementById("pUnit").value,
-    price,
-    stock: Number(document.getElementById("pStock").value) || 0,
-    category_id: document.getElementById("pCategory").value || undefined,
-    occasion: document.getElementById("pOccasion").value.trim() || undefined,
-  };
   try {
-    await api("POST", "/api/vendor/products", payload);
-    ["pName", "pNameMl", "pPrice", "pStock", "pOccasion"].forEach((id) => (document.getElementById(id).value = ""));
-    toast("Product added");
-    loadProducts();
+    await api("POST", "/api/vendor/products", {
+      name_en: name, name_ml: document.getElementById("pNameMl").value.trim() || undefined,
+      unit: document.getElementById("pUnit").value, price,
+      stock: Number(document.getElementById("pStock").value) || 0,
+      category_id: document.getElementById("pCategory").value || undefined,
+      occasion: document.getElementById("pOccasion").value.trim() || undefined,
+    });
+    ["pName","pNameMl","pPrice","pStock","pOccasion"].forEach((id) => (document.getElementById(id).value = ""));
+    toast("Product added"); loadProducts();
   } catch (e) { toast(e.message); }
 };
 
 async function loadCategories() {
   try {
     categories = await api("GET", "/api/categories");
-    document.getElementById("pCategory").innerHTML =
-      '<option value="">— none —</option>' +
-      categories.map((c) => `<option value="${c.id}">${escapeHtml(c.name_en)}</option>`).join("");
+    document.getElementById("pCategory").innerHTML = '<option value="">— none —</option>' + categories.map((c) => `<option value="${c.id}">${escapeHtml(c.name_en)}</option>`).join("");
   } catch (_) {}
 }
 
-/* ---------- Orders ---------- */
 async function loadOrders() {
   const body = document.getElementById("ordersBody");
   try {
     const orders = await api("GET", "/api/vendor/orders");
     document.getElementById("ordersEmpty").classList.toggle("hidden", orders.length > 0);
-    body.innerHTML = orders.map((o) => {
-      const items = o.items.map((i) => `${i.qty} × ${i.name_en}`).join(", ");
-      const type = o.delivery_type === "vendor" ? "Self-delivery" : "Platform partner";
-      return `
-      <div class="order">
-        <div class="top">
-          <span class="oid">${escapeHtml(o.id)}</span>
-          <span class="badge ${o.status}">${escapeHtml(o.status)}</span>
+    body.innerHTML = orders.map((o) => `
+      <div class="card" style="box-shadow:none;border:1.5px solid var(--line);margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <b>${escapeHtml(o.id)}</b><span class="badge ${o.status}">${escapeHtml(o.status)}</span>
         </div>
-        <div class="items">${escapeHtml(items)}</div>
-        <div class="money">${formatRupees(o.total)} &nbsp;·&nbsp; ${o.payment_method === "cod" ? "COD" : escapeHtml(o.payment_method)} &nbsp;·&nbsp; ${type}</div>
-        <div class="items">Deliver to: ${escapeHtml(o.drop_address || "—")}</div>
-      </div>`;
-    }).join("");
-  } catch (e) {
-    body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
-  }
+        <div class="hint" style="margin:6px 0 0;">${escapeHtml(o.items.map((i) => i.qty + " × " + i.name_en).join(", "))}</div>
+        <div style="margin-top:6px;font-weight:600;">${formatRupees(o.total)} · ${o.payment_method === "cod" ? "COD" : escapeHtml(o.payment_method)} · ${o.delivery_type === "vendor" ? "Self-delivery" : "Platform partner"}</div>
+      </div>`).join("");
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
 }
 
-/* ---------- Settings ---------- */
 async function loadSettings() {
   try {
     const v = await api("GET", "/api/vendor/me");
-    vendor = v;
-    document.getElementById("shopName").textContent = v.name;
+    vendor = v; document.getElementById("shopName").textContent = v.name;
     document.getElementById("setOpen").checked = v.is_open;
     document.getElementById("setOwnDelivery").checked = v.has_own_delivery;
     document.getElementById("setRadius").value = v.radius_km;
   } catch (e) { toast(e.message); }
 }
+document.getElementById("setOpen").onchange = async (e) => { try { await api("PATCH", "/api/vendor/me", { is_open: e.target.checked }); toast("Shop " + (e.target.checked ? "open" : "closed")); } catch (err) { toast(err.message); e.target.checked = !e.target.checked; } };
+document.getElementById("setOwnDelivery").onchange = async (e) => { try { await api("PATCH", "/api/vendor/me", { has_own_delivery: e.target.checked }); toast("Delivery mode updated"); } catch (err) { toast(err.message); e.target.checked = !e.target.checked; } };
+document.getElementById("setRadius").onchange = async (e) => { const v = Number(e.target.value); if (Number.isNaN(v) || v < 1) return; try { await api("PATCH", "/api/vendor/me", { radius_km: v }); toast("Radius updated"); } catch (err) { toast(err.message); } };
 
-document.getElementById("setOpen").onchange = async (e) => {
-  try { await api("PATCH", "/api/vendor/me", { is_open: e.target.checked }); toast("Shop " + (e.target.checked ? "open" : "closed")); }
-  catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
-};
-document.getElementById("setOwnDelivery").onchange = async (e) => {
-  try { await api("PATCH", "/api/vendor/me", { has_own_delivery: e.target.checked }); toast("Delivery mode updated"); }
-  catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
-};
-document.getElementById("setRadius").onchange = async (e) => {
-  const v = Number(e.target.value);
-  if (Number.isNaN(v) || v < 1) return;
-  try { await api("PATCH", "/api/vendor/me", { radius_km: v }); toast("Radius updated"); }
-  catch (err) { toast(err.message); }
-};
+/* ================= OWNER DASHBOARD ================= */
+async function loadOverview() {
+  try {
+    const o = await api("GET", "/api/owner/overview");
+    document.getElementById("overviewStats").innerHTML = [
+      ["Revenue", formatRupees(o.revenue), "money"],
+      ["Platform profit", formatRupees(o.platform_profit), "money"],
+      ["Vendor payout", formatRupees(o.vendor_payout), "money"],
+      ["Partner earnings", formatRupees(o.partner_earnings), "money"],
+      ["Vendors", o.vendors, ""],
+      ["Products", o.products, ""],
+      ["Orders", o.orders, ""],
+      ["Partners", o.partners + " (" + o.online_partners + " online)", ""],
+    ].map(([l, v, c]) => `<div class="stat ${c}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    document.getElementById("overviewRecent").innerHTML = (o.recent_orders || []).map((ord) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);">
+        <div><b>${escapeHtml(ord.id)}</b> <span class="hint">· ${escapeHtml(ord.vendor_name)}</span></div>
+        <div><span class="badge ${ord.status}">${escapeHtml(ord.status)}</span> &nbsp; <b>${formatRupees(ord.total)}</b></div>
+      </div>`).join("") || '<div class="empty">No orders yet.</div>';
+  } catch (e) { toast(e.message); }
 }
 
+async function loadVendors() {
+  const body = document.getElementById("vendorsBody");
+  try {
+    const rows = await api("GET", "/api/owner/vendors");
+    body.innerHTML = `<table><thead><tr><th>Shop</th><th>Phone</th><th>Products</th><th>Open</th><th>Own delivery</th><th></th></tr></thead><tbody>` +
+      rows.map((v) => `
+        <tr>
+          <td><b>${escapeHtml(v.name)}</b></td>
+          <td>${escapeHtml(v.phone || "—")}</td>
+          <td>${v.product_count}</td>
+          <td>${v.is_open ? "✅" : "❌"}</td>
+          <td>${v.has_own_delivery ? "Yes" : "No"}</td>
+          <td><button class="rowlink" data-id="${v.id}">Manage products →</button></td>
+        </tr>`).join("") + "</tbody></table>";
+    body.querySelectorAll("button.rowlink").forEach((b) => {
+      b.onclick = () => openVendorProducts(b.dataset.id);
+    });
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+
+document.getElementById("addVendor").onclick = async () => {
+  const name = document.getElementById("nvName").value.trim();
+  const lat = Number(document.getElementById("nvLat").value);
+  const lng = Number(document.getElementById("nvLng").value);
+  if (!name) return toast("Shop name is required");
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return toast("Valid lat/lng required");
+  try {
+    await api("POST", "/api/owner/vendors", { name, lat, lng, phone: document.getElementById("nvPhone").value.trim() || undefined, radius_km: Number(document.getElementById("nvRadius").value) || 10 });
+    ["nvName","nvPhone"].forEach((id) => (document.getElementById(id).value = ""));
+    toast("Vendor added"); loadVendors();
+  } catch (e) { toast(e.message); }
+};
+
+/* Owner: manage a single vendor's catalog */
+async function openVendorProducts(vendorId) {
+  selectedVendorId = vendorId;
+  document.querySelectorAll("section").forEach((s) => s.classList.add("hidden"));
+  document.getElementById("ownerVendorProducts").classList.remove("hidden");
+  document.getElementById("ovpTitle").textContent = "Products";
+  await loadOwnerVendorProducts();
+}
+document.getElementById("backToVendors").onclick = () => { selectedVendorId = null; showTab("vendors"); loadVendors(); };
+
+async function loadOwnerVendorProducts() {
+  const body = document.getElementById("ovpBody");
+  try {
+    const rows = await api("GET", `/api/owner/vendors/${selectedVendorId}/products`);
+    body.innerHTML = rows.map((p) => `
+      <tr class="${p.hidden ? "hidden-row" : ""}" data-id="${p.id}">
+        <td><div class="prod-name">${escapeHtml(p.name_en)}</div><div class="prod-unit">${escapeHtml(p.unit)}</div></td>
+        <td><input type="number" min="0" step="1" value="${p.price}" data-field="price" /></td>
+        <td><input type="number" min="0" step="1" value="${p.stock}" data-field="stock" /></td>
+        <td style="text-align:center"><label class="toggle"><input type="checkbox" ${p.hidden ? "" : "checked"} data-field="hidden" /><span class="slider"></span></label></td>
+      </tr>`).join("");
+    wireProductRows(body, "/api/owner/products/");
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+document.getElementById("ovpAdd").onclick = async () => {
+  const name = document.getElementById("ovpName").value.trim();
+  const price = Number(document.getElementById("ovpPrice").value);
+  if (!name) return toast("Product name is required");
+  if (Number.isNaN(price) || price < 0) return toast("Enter a valid price");
+  try {
+    await api("POST", `/api/owner/vendors/${selectedVendorId}/products`, { name_en: name, unit: document.getElementById("ovpUnit").value, price, stock: Number(document.getElementById("ovpStock").value) || 0 });
+    ["ovpName","ovpPrice","ovpStock"].forEach((id) => (document.getElementById(id).value = ""));
+    toast("Product added"); loadOwnerVendorProducts();
+  } catch (e) { toast(e.message); }
+};
+
+async function loadOwnerOrders() {
+  const body = document.getElementById("ownerOrdersBody");
+  try {
+    const rows = await api("GET", "/api/owner/orders");
+    body.innerHTML = `<table><thead><tr><th>Order</th><th>Shop</th><th>Status</th><th>Total</th><th>Delivery</th></tr></thead><tbody>` +
+      rows.map((o) => `
+        <tr>
+          <td><b>${escapeHtml(o.id)}</b></td>
+          <td>${escapeHtml(o.vendor_name)}</td>
+          <td><span class="badge ${o.status}">${escapeHtml(o.status)}</span></td>
+          <td><b>${formatRupees(o.total)}</b></td>
+          <td>${o.delivery_type === "vendor" ? "Self" : "Partner"}</td>
+        </tr>`).join("") + "</tbody></table>";
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+
+async function loadPartners() {
+  const body = document.getElementById("partnersBody");
+  try {
+    const rows = await api("GET", "/api/owner/partners");
+    body.innerHTML = `<table><thead><tr><th>Partner</th><th>Phone</th><th>Vehicle</th><th>Status</th><th>Online</th><th></th></tr></thead><tbody>` +
+      rows.map((p) => `
+        <tr>
+          <td><b>${escapeHtml(p.name || "—")}</b></td>
+          <td>${escapeHtml(p.phone)}</td>
+          <td>${escapeHtml(p.vehicle || "—")}</td>
+          <td><span class="badge ${p.kyc_status}">${escapeHtml(p.kyc_status)}</span></td>
+          <td>${p.is_online ? "🟢" : "⚪"}</td>
+          <td>${p.kyc_status !== "verified" ? `<button class="mini" data-id="${p.id}">Approve</button>` : ""}</td>
+        </tr>`).join("") + "</tbody></table>";
+    body.querySelectorAll("button.mini").forEach((b) => {
+      b.onclick = async () => { try { await api("PATCH", "/api/owner/partners/" + b.dataset.id, { kyc_status: "verified" }); toast("Partner approved"); loadPartners(); } catch (e) { toast(e.message); } };
+    });
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+
+async function loadSettlements() {
+  const body = document.getElementById("settlementsBody");
+  try {
+    const rows = await api("GET", "/api/owner/settlements");
+    body.innerHTML = `<table><thead><tr><th>Vendor</th><th>Phone</th><th>Orders</th><th>Payout owed</th></tr></thead><tbody>` +
+      rows.map((s) => `
+        <tr><td><b>${escapeHtml(s.name)}</b></td><td>${escapeHtml(s.phone || "—")}</td><td>${s.order_count}</td><td><b>${formatRupees(s.total_payout)}</b></td></tr>`).join("") + "</tbody></table>";
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+
+const SETTING_FIELDS = [
+  ["platform_fee", "Platform fee (₹/order)"],
+  ["delivery_base_fee", "Delivery base fee (₹)"],
+  ["delivery_rate_per_km", "Delivery per km (₹)"],
+  ["partner_base_pay", "Partner base pay (₹)"],
+  ["partner_rate_per_km", "Partner per km (₹)"],
+  ["fuel_cost_per_km", "Fuel cost per km (₹)"],
+];
+async function loadOwnerSettings() {
+  const body = document.getElementById("ownerSettingsBody");
+  try {
+    const s = await api("GET", "/api/owner/settings");
+    body.innerHTML = SETTING_FIELDS.map(([k, l]) => `
+      <div class="setting-row">
+        <div class="meta"><b>${l}</b><span>${k}</span></div>
+        <input type="number" min="0" step="1" value="${s[k] ?? ""}" data-key="${k}" />
+      </div>`).join("");
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+document.getElementById("saveOwnerSettings").onclick = async () => {
+  const payload = {};
+  document.querySelectorAll("#ownerSettingsBody input[data-key]").forEach((inp) => {
+    const v = Number(inp.value);
+    if (!Number.isNaN(v) && v >= 0) payload[inp.dataset.key] = v;
+  });
+  try { await api("PATCH", "/api/owner/settings", payload); toast("Economics updated"); loadOwnerSettings(); }
+  catch (e) { toast(e.message); }
+};
+
 /* ---------- Boot ---------- */
-if (token) {
-  // Validate the stored token by fetching /me; fall back to login if invalid.
-  api("GET", "/api/vendor/me")
-    .then((v) => { vendor = v; enterConsole(); })
-    .catch(() => { token = ""; localStorage.removeItem("vendor_token"); });
+if (token && role) {
+  const mePath = role === "owner" ? "/api/owner/overview" : "/api/vendor/me";
+  api("GET", mePath)
+    .then((r) => { if (role === "vendor") vendor = r; enterConsole(); })
+    .catch(() => { token = ""; role = ""; localStorage.removeItem("onam_token"); localStorage.removeItem("onam_role"); });
+} else {
+  document.getElementById("login").classList.remove("hidden");
 }
 </script>
 </body>

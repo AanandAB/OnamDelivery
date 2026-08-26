@@ -15,6 +15,7 @@ import * as settingsRoutes from "./routes/settings";
 import * as meRoutes from "./routes/me";
 import * as partnerRoutes from "./routes/partners";
 import * as vendorConsoleRoutes from "./routes/vendor";
+import * as ownerRoutes from "./routes/owner";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -68,6 +69,22 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/api\/vendor\/products$/, handler: vendorConsoleRoutes.createProduct },
   { method: "PATCH", pattern: /^\/api\/vendor\/products\/([^/]+)$/, handler: vendorConsoleRoutes.updateProduct },
   { method: "GET", pattern: /^\/api\/vendor\/orders$/, handler: vendorConsoleRoutes.listOrders },
+
+  { method: "POST", pattern: /^\/api\/owner\/otp$/, handler: ownerRoutes.requestOtp },
+  { method: "POST", pattern: /^\/api\/owner\/verify$/, handler: ownerRoutes.verifyOtp },
+  { method: "GET", pattern: /^\/api\/owner\/overview$/, handler: ownerRoutes.overview },
+  { method: "GET", pattern: /^\/api\/owner\/vendors$/, handler: ownerRoutes.listVendors },
+  { method: "POST", pattern: /^\/api\/owner\/vendors$/, handler: ownerRoutes.createVendor },
+  { method: "PATCH", pattern: /^\/api\/owner\/vendors\/([^/]+)$/, handler: ownerRoutes.updateVendor },
+  { method: "GET", pattern: /^\/api\/owner\/vendors\/([^/]+)\/products$/, handler: ownerRoutes.listProducts },
+  { method: "POST", pattern: /^\/api\/owner\/vendors\/([^/]+)\/products$/, handler: ownerRoutes.createProduct },
+  { method: "PATCH", pattern: /^\/api\/owner\/products\/([^/]+)$/, handler: ownerRoutes.updateProduct },
+  { method: "GET", pattern: /^\/api\/owner\/orders$/, handler: ownerRoutes.listOrders },
+  { method: "GET", pattern: /^\/api\/owner\/partners$/, handler: ownerRoutes.listPartners },
+  { method: "PATCH", pattern: /^\/api\/owner\/partners\/([^/]+)$/, handler: ownerRoutes.updatePartner },
+  { method: "GET", pattern: /^\/api\/owner\/settlements$/, handler: ownerRoutes.settlements },
+  { method: "GET", pattern: /^\/api\/owner\/settings$/, handler: ownerRoutes.getSettings },
+  { method: "PATCH", pattern: /^\/api\/owner\/settings$/, handler: ownerRoutes.updateSettings },
 ];
 
 export default {

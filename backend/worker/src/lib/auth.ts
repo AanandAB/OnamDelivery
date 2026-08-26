@@ -137,6 +137,23 @@ export async function requireVendor(req: Request, env: Env): Promise<AuthVendor 
   return { vendorId: payload.sub, phone: (payload.phone as string) ?? "" };
 }
 
+export interface AuthOwner {
+  ownerId: string;
+  phone: string;
+}
+
+/** Extract + verify an OWNER (super-admin) bearer token (JWT role="owner"). */
+export async function requireOwner(req: Request, env: Env): Promise<AuthOwner | Response> {
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!token) return error("Missing bearer token", 401);
+  const payload = await verifyToken(token, secret(env));
+  if (!payload || payload.role !== "owner" || typeof payload.sub !== "string") {
+    return error("Owner authentication required", 401);
+  }
+  return { ownerId: payload.sub, phone: (payload.phone as string) ?? "" };
+}
+
 /** Issue a dev OTP: persist it and return the code (production would SMS it). */
 export async function issueOtp(env: Env, phone: string): Promise<{ code: string }> {
   const code = generateOtp();

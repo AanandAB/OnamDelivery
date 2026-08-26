@@ -75,6 +75,22 @@ Vendor tokens are JWTs with `role="vendor"`; scoped to the vendor's own shop.
 
 Console UI: https://onam-flowers-admin.pages.dev (Cloudflare Pages).
 
+## Owner (super-admin, role="owner")
+The platform operator logs in with the configured `owner_phone` (settings table,
+default `9747000000`). Full read/write across every vendor + the platform.
+
+- `POST /api/owner/otp` — `{ phone }` → `{ dev_otp }` (owner phone only, else 403)
+- `POST /api/owner/verify` — `{ phone, code, consent }` → `{ token, owner }`
+- `GET /api/owner/overview` — stats (vendors/products/orders/partners, revenue,
+  platform profit, partner earnings, vendor payout) + recent orders
+- `GET/POST /api/owner/vendors`, `PATCH /api/owner/vendors/:id` — manage vendors
+- `GET/POST /api/owner/vendors/:id/products`, `PATCH /api/owner/products/:id` —
+  manage ANY vendor's catalog (edit any stock/price)
+- `GET /api/owner/orders` — all orders
+- `GET /api/owner/partners`, `PATCH /api/owner/partners/:id` — approve partners (kyc)
+- `GET /api/owner/settlements` — per-vendor payout summary
+- `GET/PATCH /api/owner/settings` — edit the delivery economics rates
+
 ## Economics (editable in the `settings` table)
 Fuel reference: ₹116/L ÷ 20 km/L = ₹5.80/km.
 

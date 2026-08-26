@@ -47,7 +47,7 @@ customers, and delivery partners, plus a company-owner dashboard.
 - **Phase 4** — Maps + live tracking: flutter_map + OSRM + breadcrumbs. (DONE)
 - **Phase 5** — Vendor console (Pages): catalog, stock, order queue. (DONE)
 - **Phase 6** — Owner dashboard (Pages): ops map, analytics, settlements,
-  approvals.
+  approvals. (DONE — analytics/settlements/approvals/catalog controls; ops map deferred to polish)
 - **Phase 7** — UPI payments, push notifications, reviews, polish.
 
 ## Flower-business differentiators
