@@ -10,6 +10,8 @@ import * as categoryRoutes from "./routes/categories";
 import * as vendorRoutes from "./routes/vendors";
 import * as productRoutes from "./routes/products";
 import * as couponRoutes from "./routes/coupons";
+import * as orderRoutes from "./routes/orders";
+import * as settingsRoutes from "./routes/settings";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -21,9 +23,12 @@ interface Route {
 
 const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/categories$/, handler: categoryRoutes.listCategories },
+  { method: "GET", pattern: /^\/api\/settings$/, handler: settingsRoutes.getSettings },
 
   { method: "GET", pattern: /^\/api\/vendors$/, handler: vendorRoutes.listVendors },
+  { method: "POST", pattern: /^\/api\/vendors$/, handler: vendorRoutes.createVendor },
   { method: "GET", pattern: /^\/api\/vendors\/([^/]+)$/, handler: vendorRoutes.getVendor },
+  { method: "PATCH", pattern: /^\/api\/vendors\/([^/]+)$/, handler: vendorRoutes.updateVendor },
   { method: "GET", pattern: /^\/api\/vendors\/([^/]+)\/products$/, handler: productRoutes.listProducts },
 
   { method: "GET", pattern: /^\/api\/products$/, handler: productRoutes.listAllProducts },
@@ -35,6 +40,10 @@ const routes: Route[] = [
 
   { method: "POST", pattern: /^\/api\/coupons$/, handler: couponRoutes.createCoupon },
   { method: "POST", pattern: /^\/api\/coupons\/validate$/, handler: couponRoutes.validateCoupon },
+
+  { method: "POST", pattern: /^\/api\/orders$/, handler: orderRoutes.createOrder },
+  { method: "GET", pattern: /^\/api\/orders$/, handler: orderRoutes.listOrders },
+  { method: "GET", pattern: /^\/api\/orders\/([^/]+)$/, handler: orderRoutes.getOrder },
 ];
 
 export default {
