@@ -13,6 +13,7 @@ import * as couponRoutes from "./routes/coupons";
 import * as orderRoutes from "./routes/orders";
 import * as settingsRoutes from "./routes/settings";
 import * as meRoutes from "./routes/me";
+import * as partnerRoutes from "./routes/partners";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -47,6 +48,15 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/orders\/([^/]+)$/, handler: orderRoutes.getOrder },
 
   { method: "DELETE", pattern: /^\/api\/me$/, handler: meRoutes.deleteMe },
+
+  { method: "POST", pattern: /^\/api\/partner\/otp$/, handler: partnerRoutes.requestOtp },
+  { method: "POST", pattern: /^\/api\/partner\/verify$/, handler: partnerRoutes.verifyOtp },
+  { method: "GET", pattern: /^\/api\/partner\/me$/, handler: partnerRoutes.getMe },
+  { method: "PATCH", pattern: /^\/api\/partner\/me$/, handler: partnerRoutes.updateMe },
+  { method: "GET", pattern: /^\/api\/partner\/orders\/available$/, handler: partnerRoutes.listAvailable },
+  { method: "GET", pattern: /^\/api\/partner\/orders$/, handler: partnerRoutes.listMine },
+  { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/accept$/, handler: partnerRoutes.acceptOrder },
+  { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/status$/, handler: partnerRoutes.updateStatus },
 ];
 
 export default {

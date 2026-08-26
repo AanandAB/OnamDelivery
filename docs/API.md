@@ -42,6 +42,22 @@ Auth: `Authorization: Bearer <token>` (JWT HS256).
 - `GET /api/orders` (auth) — current user's orders
 - `GET /api/orders/:id` (auth) — single order
 
+## Delivery partners
+Partner tokens are JWTs with `role="partner"`; user tokens are rejected here
+(and vice-versa). Partner-facing order payloads omit the handover `otp`.
+
+- `POST /api/partner/otp` — `{ phone }` → `{ dev_otp }`
+- `POST /api/partner/verify` — `{ phone, code, consent, consent_version?, name?, vehicle? }`
+  → `{ token, partner }` (consent is required — DPDP)
+- `GET /api/partner/me` (partner) — profile + `is_online`
+- `PATCH /api/partner/me` (partner) — `{ is_online?, current_lat?, current_lng?, name?, vehicle? }`;
+  location updates also append a `partner_locations` breadcrumb
+- `GET /api/partner/orders/available` (partner) — unclaimed platform orders
+- `GET /api/partner/orders` (partner) — my assigned orders
+- `POST /api/partner/orders/:id/accept` (partner) — atomic claim
+- `POST /api/partner/orders/:id/status` (partner) — `{ status, otp? }`; status ladder
+  `accepted → picked_up → out_for_delivery → delivered`; `delivered` requires the OTP
+
 ## Economics (editable in the `settings` table)
 Fuel reference: ₹116/L ÷ 20 km/L = ₹5.80/km.
 

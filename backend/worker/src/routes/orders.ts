@@ -118,8 +118,8 @@ export async function createOrder(
     `INSERT INTO orders
       (id, user_id, vendor_id, status, items, subtotal, delivery_fee, delivery_pay,
        platform_fee, vendor_payout, total, payment_method, delivery_type, distance_km,
-       drop_lat, drop_lng, drop_address, otp)
-     VALUES (?, ?, ?, 'placed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       pickup_lat, pickup_lng, drop_lat, drop_lng, drop_address, otp)
+     VALUES (?, ?, ?, 'placed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       orderId,
@@ -135,6 +135,8 @@ export async function createOrder(
       paymentMethod,
       deliveryType,
       q.distance_km,
+      vendor.lat,
+      vendor.lng,
       dropLat,
       dropLng,
       dropAddress,

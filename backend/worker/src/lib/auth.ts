@@ -103,6 +103,23 @@ export async function requireAuth(req: Request, env: Env): Promise<AuthUser | Re
   return { userId: payload.sub, phone: (payload.phone as string) ?? "" };
 }
 
+export interface AuthPartner {
+  partnerId: string;
+  phone: string;
+}
+
+/** Extract + verify a PARTNER bearer token (JWT carries role="partner"). */
+export async function requirePartner(req: Request, env: Env): Promise<AuthPartner | Response> {
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!token) return error("Missing bearer token", 401);
+  const payload = await verifyToken(token, secret(env));
+  if (!payload || payload.role !== "partner" || typeof payload.sub !== "string") {
+    return error("Partner authentication required", 401);
+  }
+  return { partnerId: payload.sub, phone: (payload.phone as string) ?? "" };
+}
+
 /** Issue a dev OTP: persist it and return the code (production would SMS it). */
 export async function issueOtp(env: Env, phone: string): Promise<{ code: string }> {
   const code = generateOtp();
