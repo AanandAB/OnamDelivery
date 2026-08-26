@@ -35,9 +35,10 @@ export async function requestOtp(
   const normalized = phone.replace(/\D/g, "");
   if (normalized.length < 10) return error("Invalid phone number", 400);
 
-  const { code } = await issueOtp(env, normalized);
-  // Dev-mode: return the code so it can be tested without an SMS provider.
-  return json({ ok: true, dev_otp: code, note: "dev mode — send this code via SMS in production" });
+  const { code, devMode } = await issueOtp(env, normalized);
+  return devMode
+    ? json({ ok: true, dev_otp: code, note: "dev mode" })
+    : json({ ok: true, via: "whatsapp", note: "OTP sent via WhatsApp" });
 }
 
 /** POST /api/partner/verify  { phone, code, name?, vehicle?, consent, consent_version? } */

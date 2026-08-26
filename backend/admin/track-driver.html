@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Delivery tracking</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f6f1e8; color: #2b2b2b; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+  .card { background: #fff; border-radius: 20px; padding: 40px 32px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.08); margin: 24px; }
+  h1 { font-size: 1.3rem; margin: 0 0 6px; }
+  p { color: #7a8290; font-size: .9rem; line-height: 1.5; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #c8ced6; vertical-align: middle; }
+  .dot.live { background: #3fa34d; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  #state { font-weight: 600; }
+  #status { margin-top: 16px; color: #7a8290; font-size: .85rem; min-height: 1.2em; }
+  #status.err { color: #d94f70; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚚 Delivery tracking</h1>
+    <p>Keep this page open while you deliver. Your location is shared with the shop in real time.</p>
+    <div><span class="dot" id="dot"></span><span id="state">Starting…</span></div>
+    <div id="status"></div>
+  </div>
+<script>
+const token = new URLSearchParams(location.search).get("token");
+const BASE = "https://onam-flowers-api.aanandab44.workers.dev";
+const dot = document.getElementById("dot");
+const state = document.getElementById("state");
+const status = document.getElementById("status");
+
+function fail(msg) {
+  dot.classList.remove("live");
+  state.textContent = "Location unavailable";
+  status.textContent = msg;
+  status.classList.add("err");
+}
+
+if (!token) {
+  state.textContent = "Invalid link";
+  fail("Missing tracking token — open the link from the vendor console.");
+} else if (!navigator.geolocation) {
+  fail("This browser doesn't support geolocation.");
+} else {
+  function send(pos) {
+    const { latitude, longitude } = pos.coords;
+    fetch(BASE + "/api/track-driver", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, lat: latitude, lng: longitude }),
+    })
+      .then((r) => {
+        if (r.ok) {
+          dot.classList.add("live");
+          state.textContent = "Sharing live location";
+          status.textContent = "Last sent " + new Date().toLocaleTimeString();
+          status.classList.remove("err");
+        } else {
+          status.textContent = "Send failed (invalid link?)";
+          status.classList.add("err");
+        }
+      })
+      .catch(() => { status.textContent = "Network error — retrying…"; });
+  }
+  function tick() {
+    navigator.geolocation.getCurrentPosition(send, (e) => fail(e.message), { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 });
+  }
+  tick();
+  setInterval(tick, 5000); // report every 5 seconds
+}
+</script>
+</body>
+</html>

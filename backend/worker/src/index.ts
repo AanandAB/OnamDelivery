@@ -72,6 +72,10 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/api\/vendor\/products$/, handler: vendorConsoleRoutes.createProduct },
   { method: "PATCH", pattern: /^\/api\/vendor\/products\/([^/]+)$/, handler: vendorConsoleRoutes.updateProduct },
   { method: "GET", pattern: /^\/api\/vendor\/orders$/, handler: vendorConsoleRoutes.listOrders },
+  { method: "GET", pattern: /^\/api\/vendor\/drivers$/, handler: vendorConsoleRoutes.listDrivers },
+  { method: "POST", pattern: /^\/api\/vendor\/drivers$/, handler: vendorConsoleRoutes.createDriver },
+  { method: "DELETE", pattern: /^\/api\/vendor\/drivers\/([^/]+)$/, handler: vendorConsoleRoutes.deleteDriver },
+  { method: "POST", pattern: /^\/api\/track-driver$/, handler: vendorConsoleRoutes.trackDriver },
 
   { method: "POST", pattern: /^\/api\/owner\/otp$/, handler: ownerRoutes.requestOtp },
   { method: "POST", pattern: /^\/api\/owner\/verify$/, handler: ownerRoutes.verifyOtp },
@@ -88,6 +92,8 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/owner\/settlements$/, handler: ownerRoutes.settlements },
   { method: "GET", pattern: /^\/api\/owner\/settings$/, handler: ownerRoutes.getSettings },
   { method: "PATCH", pattern: /^\/api\/owner\/settings$/, handler: ownerRoutes.updateSettings },
+  { method: "GET", pattern: /^\/api\/owner\/analytics$/, handler: ownerRoutes.analytics },
+  { method: "GET", pattern: /^\/api\/owner\/drivers$/, handler: ownerRoutes.listDrivers },
 ];
 
 export default {

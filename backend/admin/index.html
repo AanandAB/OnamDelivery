@@ -6,6 +6,7 @@
 <title>Onam Flowers — Admin</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --rose: #d94f70;
@@ -180,11 +181,13 @@
     <nav class="tabs" id="vendorTabs">
       <button data-tab="products" class="active">Products</button>
       <button data-tab="orders">Orders</button>
+      <button data-tab="delivery">Delivery</button>
       <button data-tab="settings">Settings</button>
     </nav>
 
     <nav class="tabs hidden" id="ownerTabs">
       <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="reports">Reports</button>
       <button data-tab="map">Map</button>
       <button data-tab="vendors">Vendors</button>
       <button data-tab="oorders">Orders</button>
@@ -260,6 +263,29 @@
     </section>
     <section id="tab-osettings" class="hidden">
       <div class="card"><h2>Delivery economics</h2><div class="hint">These rates drive fees and partner pay across the whole platform.</div><div id="ownerSettingsBody"></div><button class="btn" id="saveOwnerSettings">Save changes</button></div>
+    </section>
+
+    <!-- Vendor: delivery boys -->
+    <section id="tab-delivery" class="hidden">
+      <div class="card">
+        <h2>Add a delivery boy</h2>
+        <div class="hint">Onboard your own delivery boy — they get a tracking link that shares their live location.</div>
+        <div class="grid2">
+          <div class="full"><label>Name *</label><input id="drvName" /></div>
+          <div class="full"><label>Phone</label><input id="drvPhone" type="tel" maxlength="10" /></div>
+        </div>
+        <button class="btn" id="addDriver">Add delivery boy</button>
+      </div>
+      <div class="card"><h2>Live locations</h2><div class="hint">Your delivery boys on the map.</div><div id="driverMap" style="height:320px;border-radius:14px;overflow:hidden;"></div></div>
+      <div class="card"><h2>Your delivery boys</h2><div id="driversBody"></div></div>
+    </section>
+
+    <!-- Owner: reports -->
+    <section id="tab-reports" class="hidden">
+      <div class="card"><h2>Orders &amp; revenue (14 days)</h2><div class="hint">Daily order volume, revenue, and platform profit.</div><div style="height:260px;"><canvas id="dailyChart"></canvas></div></div>
+      <div class="card"><h2>Order status distribution</h2><div style="height:240px;max-width:420px;margin:0 auto;"><canvas id="statusChart"></canvas></div></div>
+      <div class="card"><h2>Top vendors by payout</h2><div style="height:220px;"><canvas id="vendorChart"></canvas></div></div>
+      <div class="card"><h2>Top products by quantity sold</h2><div style="height:240px;"><canvas id="productChart"></canvas></div></div>
     </section>
 
     <!-- Owner: manage a vendor's products -->
@@ -395,7 +421,7 @@ document.getElementById("logout").onclick = () => {
 
 /* ---------- Tabs (generic, both navs) ---------- */
 function showTab(name) {
-  const sections = ["products","orders","settings","overview","map","vendors","oorders","partners","settlements","osettings"];
+  const sections = ["products","orders","delivery","settings","overview","reports","map","vendors","oorders","partners","settlements","osettings"];
   sections.forEach((s) => document.getElementById("tab-" + s).classList.add("hidden"));
   document.getElementById("ownerVendorProducts").classList.add("hidden");
   const el = document.getElementById("tab-" + name);
@@ -408,6 +434,8 @@ document.querySelectorAll("nav.tabs").forEach((nav) => {
       btn.classList.add("active");
       showTab(btn.dataset.tab);
       if (btn.dataset.tab === "map") setTimeout(loadMap, 60);
+      if (btn.dataset.tab === "reports") setTimeout(loadReports, 60);
+      if (btn.dataset.tab === "delivery") { loadDrivers(); setTimeout(loadDriverMap, 60); }
     };
   });
 });
@@ -691,6 +719,117 @@ async function loadMap() {
     L.circleMarker([p.current_lat, p.current_lng], { radius: 6, color: "#2196F3", fillColor: "#2196F3", fillOpacity: 0.9, weight: 2 })
       .addTo(mapInstance).bindPopup(`<b>${escapeHtml(p.name || "Partner")}</b>`);
   });
+}
+
+/* ---------- Reports (Chart.js) ---------- */
+let charts = {};
+async function loadReports() {
+  if (!window.Chart) return;
+  const a = await api("GET", "/api/owner/analytics").catch(() => null);
+  if (!a) return;
+  const rose = "#d94f70", leaf = "#3fa34d", gold = "#e8b84b", blue = "#1a5fa8";
+  Object.values(charts).forEach((c) => c.destroy());
+  charts = {};
+
+  const labels = a.daily.map((d) => d.date.slice(5));
+  charts.daily = new Chart(document.getElementById("dailyChart"), {
+    type: "line",
+    data: { labels, datasets: [
+      { label: "Orders", data: a.daily.map((d) => d.orders), borderColor: rose, backgroundColor: rose + "22", tension: 0.3, yAxisID: "y" },
+      { label: "Revenue (₹)", data: a.daily.map((d) => d.revenue), borderColor: leaf, backgroundColor: "transparent", tension: 0.3, yAxisID: "y1" },
+      { label: "Platform profit (₹)", data: a.daily.map((d) => d.profit), borderColor: gold, backgroundColor: "transparent", tension: 0.3, yAxisID: "y1" },
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { position: "left", beginAtZero: true, ticks: { precision: 0 } },
+                y1: { position: "right", beginAtZero: true, grid: { drawOnChartArea: false } } } }
+  });
+
+  charts.status = new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: { labels: Object.keys(a.status_counts), datasets: [{ data: Object.values(a.status_counts), backgroundColor: [rose, leaf, gold, blue, "#9aa3b2", "#c99a2e", "#6a7280"] }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  charts.vendor = new Chart(document.getElementById("vendorChart"), {
+    type: "bar",
+    data: { labels: a.top_vendors.map((v) => v.name), datasets: [{ label: "Payout (₹)", data: a.top_vendors.map((v) => v.revenue), backgroundColor: rose }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  charts.product = new Chart(document.getElementById("productChart"), {
+    type: "bar",
+    data: { labels: a.top_products.map((p) => p.name), datasets: [{ label: "Sold", data: a.top_products.map((p) => p.qty), backgroundColor: leaf }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y", plugins: { legend: { display: false } } }
+  });
+}
+
+/* ---------- Vendor delivery boys ---------- */
+function timeAgo(ts) {
+  const s = Math.floor(Date.now() / 1000 - (ts || 0));
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s / 60) + " min ago";
+  if (s < 86400) return Math.floor(s / 3600) + " hr ago";
+  return Math.floor(s / 86400) + " days ago";
+}
+
+async function loadDrivers() {
+  const body = document.getElementById("driversBody");
+  try {
+    const rows = await api("GET", "/api/vendor/drivers");
+    body.innerHTML = rows.map((d) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);">
+        <div>
+          <b>${escapeHtml(d.name)}</b>
+          <div class="hint" style="margin:0;">${escapeHtml(d.phone || "—")}${d.last_seen ? " · seen " + timeAgo(d.last_seen) : " · not tracked yet"}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="mini" data-url="${escapeHtml(d.tracking_url)}">Copy link</button>
+          <button class="mini" style="border-color:var(--rose);color:var(--rose);" data-del="${d.id}">Remove</button>
+        </div>
+      </div>`).join("") || '<div class="empty">No delivery boys yet — add your first above.</div>';
+
+    body.querySelectorAll("button[data-url]").forEach((b) => {
+      b.onclick = () => {
+        const done = () => toast("Tracking link copied — send it to the delivery boy");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(b.dataset.url).then(done).catch(() => prompt("Copy this link:", b.dataset.url));
+        } else { prompt("Copy this link:", b.dataset.url); }
+      };
+    });
+    body.querySelectorAll("button[data-del]").forEach((b) => {
+      b.onclick = async () => {
+        try { await api("DELETE", "/api/vendor/drivers/" + b.dataset.del); toast("Removed"); loadDrivers(); loadDriverMap(); }
+        catch (e) { toast(e.message); }
+      };
+    });
+  } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
+}
+
+document.getElementById("addDriver").onclick = async () => {
+  const name = document.getElementById("drvName").value.trim();
+  if (!name) return toast("Name is required");
+  try {
+    await api("POST", "/api/vendor/drivers", { name, phone: document.getElementById("drvPhone").value.trim() || undefined });
+    document.getElementById("drvName").value = "";
+    document.getElementById("drvPhone").value = "";
+    toast("Delivery boy added — copy their tracking link below");
+    loadDrivers(); loadDriverMap();
+  } catch (e) { toast(e.message); }
+};
+
+let driverMapInstance = null;
+async function loadDriverMap() {
+  if (!window.L || !document.getElementById("driverMap")) return;
+  const rows = await api("GET", "/api/vendor/drivers").catch(() => []);
+  if (driverMapInstance) { driverMapInstance.remove(); driverMapInstance = null; }
+  driverMapInstance = L.map("driverMap").setView([11.8745, 75.3704], 13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(driverMapInstance);
+  const live = rows.filter((d) => d.current_lat != null);
+  live.forEach((d) => {
+    L.circleMarker([d.current_lat, d.current_lng], { radius: 7, color: "#3fa34d", fillColor: "#3fa34d", fillOpacity: 0.9, weight: 2 })
+      .addTo(driverMapInstance).bindPopup(`<b>${escapeHtml(d.name)}</b>`);
+  });
+  if (live.length >= 2) driverMapInstance.fitBounds(live.map((d) => [d.current_lat, d.current_lng]));
 }
 
 /* ---------- Boot ---------- */

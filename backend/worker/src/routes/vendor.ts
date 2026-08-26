@@ -59,8 +59,10 @@ export async function requestOtp(
     .first();
   if (!vendor) return error("No vendor registered with this phone", 404);
 
-  const { code } = await issueOtp(env, normalized);
-  return json({ ok: true, dev_otp: code, note: "dev mode — send this code via SMS in production" });
+  const { code, devMode } = await issueOtp(env, normalized);
+  return devMode
+    ? json({ ok: true, dev_otp: code, note: "dev mode" })
+    : json({ ok: true, via: "whatsapp", note: "OTP sent via WhatsApp" });
 }
 
 /** POST /api/vendor/verify  { phone, code, consent, consent_version? } */
@@ -276,4 +278,113 @@ export async function listOrders(
       created_at: o.created_at,
     })),
   );
+}
+
+// ---- Self-delivery drivers (a vendor's own delivery boys) ----
+
+function driverJson(d: Record<string, unknown>) {
+  return {
+    id: d.id,
+    name: d.name,
+    phone: d.phone,
+    current_lat: d.current_lat,
+    current_lng: d.current_lng,
+    last_seen: d.last_seen,
+    share_token: d.share_token,
+    tracking_url: `https://onam-flowers-admin.pages.dev/track-driver.html?token=${d.share_token}`,
+  };
+}
+
+/** GET /api/vendor/drivers — my delivery boys + live position. */
+export async function listDrivers(
+  req: Request,
+  env: Env,
+  _url: URL,
+  _params: string[],
+): Promise<Response> {
+  const auth = await requireVendor(req, env);
+  if (auth instanceof Response) return auth;
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM vendor_drivers WHERE vendor_id = ?1 ORDER BY name",
+  )
+    .bind(auth.vendorId)
+    .all<Record<string, unknown>>();
+  return json(results.map(driverJson));
+}
+
+/** POST /api/vendor/drivers — onboard a delivery boy (generates a tracking link). */
+export async function createDriver(
+  req: Request,
+  env: Env,
+  _url: URL,
+  _params: string[],
+): Promise<Response> {
+  const auth = await requireVendor(req, env);
+  if (auth instanceof Response) return auth;
+
+  const body = await readBody(req);
+  const name = requireString(body, "name");
+  if (name instanceof Response) return name;
+
+  const driverId = id();
+  const shareToken = id();
+  await env.DB.prepare(
+    "INSERT INTO vendor_drivers (id, vendor_id, name, phone, share_token) VALUES (?1, ?2, ?3, ?4, ?5)",
+  )
+    .bind(
+      driverId,
+      auth.vendorId,
+      name,
+      typeof body.phone === "string" ? body.phone.replace(/\D/g, "") : null,
+      shareToken,
+    )
+    .run();
+
+  const d = await env.DB.prepare("SELECT * FROM vendor_drivers WHERE id = ?1")
+    .bind(driverId)
+    .first<Record<string, unknown>>();
+  return json(driverJson(d!), 201);
+}
+
+/** DELETE /api/vendor/drivers/:id — remove a delivery boy. */
+export async function deleteDriver(
+  req: Request,
+  env: Env,
+  _url: URL,
+  params: string[],
+): Promise<Response> {
+  const auth = await requireVendor(req, env);
+  if (auth instanceof Response) return auth;
+  const res = await env.DB.prepare(
+    "DELETE FROM vendor_drivers WHERE id = ?1 AND vendor_id = ?2",
+  )
+    .bind(params[0], auth.vendorId)
+    .run();
+  if (res.meta.changes === 0) return error("Driver not found", 404);
+  return json({ ok: true });
+}
+
+/** POST /api/track-driver — public: a driver's phone reports its location via the tracking link. */
+export async function trackDriver(
+  req: Request,
+  env: Env,
+  _url: URL,
+  _params: string[],
+): Promise<Response> {
+  const body = await readBody(req);
+  const token = requireString(body, "token");
+  if (token instanceof Response) return token;
+  const lat = requireNumber(body, "lat");
+  if (lat instanceof Response) return lat;
+  const lng = requireNumber(body, "lng");
+  if (lng instanceof Response) return lng;
+
+  const now = Math.floor(Date.now() / 1000);
+  const res = await env.DB.prepare(
+    "UPDATE vendor_drivers SET current_lat = ?1, current_lng = ?2, last_seen = ?3 WHERE share_token = ?4",
+  )
+    .bind(lat, lng, now, token)
+    .run();
+  if (res.meta.changes === 0) return error("Invalid tracking link", 404);
+  return json({ ok: true });
 }

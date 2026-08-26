@@ -30,8 +30,10 @@ export async function requestOtp(
   if (phone instanceof Response) return phone;
   const normalized = phone.replace(/\D/g, "");
   if (normalized !== (await ownerPhone(env))) return error("Not the owner phone", 403);
-  const { code } = await issueOtp(env, normalized);
-  return json({ ok: true, dev_otp: code, note: "dev mode — send via SMS in production" });
+  const { code, devMode } = await issueOtp(env, normalized);
+  return devMode
+    ? json({ ok: true, dev_otp: code, note: "dev mode" })
+    : json({ ok: true, via: "whatsapp", note: "OTP sent via WhatsApp" });
 }
 
 /** POST /api/owner/verify — owner login. */
@@ -429,14 +431,95 @@ export async function updateSettings(
       )
         .bind(k, String(body[k]))
         .run();
-    }
-  }
+        }
+        }
 
-  const { results } = await env.DB.prepare("SELECT key, value FROM settings").all<{
-    key: string;
-    value: string;
-  }>();
-  const map: Record<string, string> = {};
-  for (const r of results) map[r.key] = r.value;
-  return json(map);
-}
+        const { results } = await env.DB.prepare("SELECT key, value FROM settings").all<{
+        key: string;
+        value: string;
+        }>();
+        const map: Record<string, string> = {};
+        for (const r of results) map[r.key] = r.value;
+        return json(map);
+        }
+
+        /** GET /api/owner/analytics — chart/report data for the dashboard. */
+        export async function analytics(
+        req: Request,
+        env: Env,
+        _url: URL,
+        _params: string[],
+        ): Promise<Response> {
+        const auth = await requireOwner(req, env);
+        if (auth instanceof Response) return auth;
+
+        // Order status distribution.
+        const statusRows = await env.DB.prepare("SELECT status, COUNT(*) c FROM orders GROUP BY status")
+        .all<{ status: string; c: number }>();
+        const status_counts: Record<string, number> = {};
+        for (const r of statusRows.results) status_counts[r.status] = r.c;
+
+        // Top vendors by payout.
+        const vendorRows = await env.DB.prepare(
+        `SELECT v.name, COUNT(o.id) AS orders, COALESCE(SUM(o.vendor_payout),0) AS revenue
+        FROM orders o JOIN vendors v ON v.id = o.vendor_id
+        WHERE o.status != 'cancelled' GROUP BY o.vendor_id ORDER BY revenue DESC LIMIT 5`,
+        ).all<{ name: string; orders: number; revenue: number }>();
+
+        // Top products — aggregate the items JSON across non-cancelled orders.
+        const itemRows = await env.DB.prepare("SELECT items FROM orders WHERE status != 'cancelled'")
+        .all<{ items: string }>();
+        const qty: Record<string, number> = {};
+        for (const o of itemRows.results) {
+        for (const it of JSON.parse(o.items || "[]") as { name_en: string; qty: number }[]) {
+        qty[it.name_en] = (qty[it.name_en] || 0) + it.qty;
+        }
+        }
+        const top_products = Object.entries(qty)
+        .map(([name, n]) => ({ name, qty: n }))
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 5);
+
+        // Daily buckets for the last 14 days (IST).
+        const IST = 5.5 * 3600 * 1000;
+        const dayKey = (ms: number) => new Date(ms + IST).toISOString().slice(0, 10);
+        const now = Date.now();
+        const buckets = new Map<string, { orders: number; revenue: number; profit: number }>();
+        for (let i = 13; i >= 0; i--) buckets.set(dayKey(now - i * 86400000), { orders: 0, revenue: 0, profit: 0 });
+
+        const ordRows = await env.DB.prepare(
+        "SELECT created_at, total, platform_fee, delivery_fee, delivery_pay FROM orders WHERE status != 'cancelled'",
+        ).all<{ created_at: number; total: number; platform_fee: number; delivery_fee: number; delivery_pay: number }>();
+        for (const o of ordRows.results) {
+        const b = buckets.get(dayKey(o.created_at * 1000));
+        if (b) {
+        b.orders += 1;
+        b.revenue += o.total;
+        b.profit += o.platform_fee + o.delivery_fee - o.delivery_pay;
+        }
+        }
+        const daily = [...buckets.entries()].map(([date, b]) => ({
+        date,
+        orders: b.orders,
+        revenue: Math.round(b.revenue),
+        profit: Math.round(b.profit),
+        }));
+
+        return json({ status_counts, top_vendors: vendorRows.results, top_products, daily });
+        }
+
+        /** GET /api/owner/drivers — all vendor self-delivery drivers (for the ops map). */
+        export async function listDrivers(
+        req: Request,
+        env: Env,
+        _url: URL,
+        _params: string[],
+        ): Promise<Response> {
+        const auth = await requireOwner(req, env);
+        if (auth instanceof Response) return auth;
+        const { results } = await env.DB.prepare(
+        `SELECT d.id, d.name, d.phone, d.current_lat, d.current_lng, d.last_seen, v.name AS vendor_name
+        FROM vendor_drivers d JOIN vendors v ON v.id = d.vendor_id ORDER BY d.name`,
+        ).all();
+        return json(results);
+        }

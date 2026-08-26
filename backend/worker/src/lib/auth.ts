@@ -6,6 +6,7 @@
 
 import type { Env } from "../env";
 import { error } from "./http";
+import { deliverOtp } from "./otp";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -154,8 +155,10 @@ export async function requireOwner(req: Request, env: Env): Promise<AuthOwner | 
   return { ownerId: payload.sub, phone: (payload.phone as string) ?? "" };
 }
 
-/** Issue a dev OTP: persist it and return the code (production would SMS it). */
-export async function issueOtp(env: Env, phone: string): Promise<{ code: string }> {
+/** Issue an OTP: persist it and deliver via the configured provider (dev returns
+ * the code; whatsapp sends it). Returns `devMode=true` when the code should be
+ * returned in the API response. */
+export async function issueOtp(env: Env, phone: string): Promise<{ code: string; devMode: boolean }> {
   const code = generateOtp();
   const expiresAt = Math.floor(Date.now() / 1000) + OTP_TTL_SECONDS;
   await env.DB.prepare(
@@ -163,7 +166,8 @@ export async function issueOtp(env: Env, phone: string): Promise<{ code: string 
   )
     .bind(phone, code, expiresAt)
     .run();
-  return { code };
+  const result = await deliverOtp(env, phone, code);
+  return { code, devMode: result.ok && result.provider === "dev" };
 }
 
 /** Verify an OTP against the newest unused code for the phone. */
