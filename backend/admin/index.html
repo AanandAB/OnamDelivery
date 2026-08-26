@@ -1,45 +1,528 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Onam Flowers — Admin</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: system-ui, -apple-system, sans-serif;
-        background: #faf6ee;
-        color: #2b2b2b;
-      }
-      .card {
-        text-align: center;
-        padding: 3rem 2rem;
-        max-width: 420px;
-      }
-      h1 { font-size: 1.6rem; margin: 0 0 0.5rem; }
-      p { color: #6b6b6b; line-height: 1.5; }
-      .badge {
-        display: inline-block;
-        background: #e8b84b;
-        color: #2b2b2b;
-        font-weight: 600;
-        border-radius: 999px;
-        padding: 0.35rem 0.9rem;
-        font-size: 0.8rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <span class="badge">Coming soon</span>
-      <h1>Onam Flowers Admin</h1>
-      <p>
-        Owner dashboard + vendor console — built in Phase 5 &amp; 6 with a
-        Leaflet live ops map, analytics, and settlement tools.
-      </p>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Onam Flowers — Vendor Console</title>
+<style>
+  :root {
+    --rose: #d94f70;
+    --leaf: #3fa34d;
+    --gold: #e8b84b;
+    --ink: #2b2b2b;
+    --muted: #7a8290;
+    --bg: #f6f1e8;
+    --card: #ffffff;
+    --line: #eee5d8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .hidden { display: none !important; }
+
+  /* ---- Login ---- */
+  #login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 12px 40px rgba(43, 43, 43, 0.08);
+  }
+  .login-card .logo { font-size: 40px; text-align: center; }
+  .login-card h1 { font-size: 1.4rem; margin: 12px 0 2px; text-align: center; }
+  .login-card .sub { color: var(--muted); text-align: center; font-size: 0.9rem; margin-bottom: 24px; }
+
+  label { display: block; font-size: 0.82rem; font-weight: 600; margin: 14px 0 6px; color: var(--ink); }
+  input, select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #fff;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--rose); }
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    background: var(--rose);
+    margin-top: 16px;
+  }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn.leaf { background: var(--leaf); }
+  .btn.small { width: auto; padding: 9px 16px; margin: 0; font-size: 0.9rem; }
+  .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 0.82rem; color: var(--muted); }
+  .consent input { width: auto; margin-top: 2px; }
+  .error { color: var(--rose); font-size: 0.85rem; margin-top: 12px; text-align: center; }
+
+  /* ---- Console layout ---- */
+  #app { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 12px;
+    gap: 12px;
+  }
+  header .brand { display: flex; align-items: center; gap: 10px; }
+  header .brand .flower { font-size: 26px; }
+  header .brand h1 { font-size: 1.15rem; margin: 0; }
+  header .brand .shop { color: var(--muted); font-size: 0.8rem; }
+  header .logout { background: none; border: 1.5px solid var(--rose); color: var(--rose); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+
+  nav.tabs {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 20px;
+    background: #efe7d9;
+    padding: 5px;
+    border-radius: 14px;
+  }
+  nav.tabs button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.92rem;
+  }
+  nav.tabs button.active { background: var(--card); color: var(--rose); box-shadow: 0 2px 8px rgba(43,43,43,0.08); }
+
+  .card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(43,43,43,0.06);
+    margin-bottom: 16px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  .card .hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); padding: 8px 6px; border-bottom: 1.5px solid var(--line); }
+  td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td input { width: 90px; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 0.92rem; }
+  td input:focus { border-color: var(--leaf); }
+  .prod-name { font-weight: 600; }
+  .prod-unit { color: var(--muted); font-size: 0.8rem; }
+  .hidden-row td { opacity: 0.45; }
+
+  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+  .toggle input { display: none; }
+  .toggle .slider {
+    position: absolute; inset: 0; border-radius: 999px; background: #d8d2c6; cursor: pointer; transition: 0.2s;
+  }
+  .toggle .slider::before {
+    content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; top: 3px; left: 3px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .toggle input:checked + .slider { background: var(--leaf); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-row .meta b { display: block; }
+  .setting-row .meta span { color: var(--muted); font-size: 0.82rem; }
+
+  .order { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .order .top { display: flex; justify-content: space-between; align-items: center; }
+  .order .oid { font-weight: 700; font-size: 0.95rem; }
+  .order .items { color: var(--muted); font-size: 0.88rem; margin: 6px 0; }
+  .order .money { font-weight: 600; font-size: 0.92rem; }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+  .badge.placed, .badge.accepted { background: #fff3d6; color: #9a6b00; }
+  .badge.picked_up, .badge.out_for_delivery { background: #dff0ff; color: #1a5fa8; }
+  .badge.delivered { background: #e2f5e4; color: #22722a; }
+  .badge.cancelled { background: #ffe2e2; color: #b02a2a; }
+  .empty { text-align: center; color: var(--muted); padding: 32px 0; }
+
+  /* Add-product form */
+  #addForm .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  #addForm .grid .full { grid-column: 1 / -1; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 12px;
+    font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 560px) {
+    #addForm .grid { grid-template-columns: 1fr; }
+    td input { width: 72px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div id="login">
+    <div class="login-card">
+      <div class="logo">💐</div>
+      <h1>Vendor Console</h1>
+      <div class="sub">Onam Flowers — manage your shop in a few taps</div>
+
+      <div id="loginStep1">
+        <label>Shop phone number</label>
+        <input id="phone" type="tel" placeholder="10-digit number" maxlength="10" />
+        <button class="btn" id="sendOtp">Send OTP</button>
+      </div>
+
+      <div id="loginStep2" class="hidden">
+        <label>Enter OTP</label>
+        <input id="code" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" />
+        <label class="consent">
+          <input type="checkbox" id="consent" />
+          <span>I agree to the privacy policy — my shop details (name, phone, location) are processed to run this store (DPDP Act 2023).</span>
+        </label>
+        <button class="btn leaf" id="verify">Sign in</button>
+        <button class="btn small" id="backToPhone" style="background:none;color:var(--muted);margin-top:8px;">Change phone</button>
+      </div>
+
+      <div class="error" id="loginError"></div>
     </div>
-  </body>
+  </div>
+
+  <!-- Console -->
+  <div id="app" class="hidden">
+    <header>
+      <div class="brand">
+        <span class="flower">💐</span>
+        <div>
+          <h1>Vendor Console</h1>
+          <span class="shop" id="shopName"></span>
+        </div>
+      </div>
+      <button class="logout" id="logout">Log out</button>
+    </header>
+
+    <nav class="tabs">
+      <button data-tab="products" class="active">Products</button>
+      <button data-tab="orders">Orders</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- Products -->
+    <section id="tab-products">
+      <div class="card">
+        <h2>Your catalog</h2>
+        <div class="hint">Edit price &amp; stock inline — changes save automatically. Hidden items aren't shown to customers.</div>
+        <table>
+          <thead><tr><th>Product</th><th>Price (₹)</th><th>Stock</th><th style="text-align:center">Visible</th></tr></thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+        <div class="empty hidden" id="productsEmpty">No products yet — add your first flower below.</div>
+      </div>
+
+      <div class="card" id="addForm">
+        <h2>Add a product</h2>
+        <div class="hint">Fill the essentials — you can edit everything later.</div>
+        <div class="grid">
+          <div class="full"><label>Name (English) *</label><input id="pName" placeholder="e.g. Jasmine Garland" /></div>
+          <div class="full"><label>Name (Malayalam, optional)</label><input id="pNameMl" placeholder="മുല്ല മാല" /></div>
+          <div><label>Unit *</label>
+            <select id="pUnit"><option value="piece">piece</option><option value="bunch">bunch</option><option value="kg">kg</option></select>
+          </div>
+          <div><label>Category</label>
+            <select id="pCategory"></select>
+          </div>
+          <div><label>Price (₹) *</label><input id="pPrice" type="number" min="0" step="1" placeholder="0" /></div>
+          <div><label>Stock</label><input id="pStock" type="number" min="0" step="1" placeholder="0" /></div>
+          <div class="full"><label>Occasion (optional)</label><input id="pOccasion" placeholder="onam / wedding / birthday / puja" /></div>
+        </div>
+        <button class="btn" id="addProduct">Add product</button>
+      </div>
+    </section>
+
+    <!-- Orders -->
+    <section id="tab-orders" class="hidden">
+      <div class="card">
+        <h2>Order queue</h2>
+        <div class="hint">Incoming orders for your shop, newest first.</div>
+        <div id="ordersBody"></div>
+        <div class="empty hidden" id="ordersEmpty">No orders yet.</div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="tab-settings" class="hidden">
+      <div class="card">
+        <h2>Shop settings</h2>
+        <div class="setting-row">
+          <div class="meta"><b>Open for orders</b><span>Customers can order while you're open</span></div>
+          <label class="toggle"><input type="checkbox" id="setOpen" /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="meta"><b>Use my own delivery boy</b><span>Off = OnamDelivery assigns a partner; On = you deliver yourself</span></div>
+          <label class="toggle"><input type="checkbox" id="setOwnDelivery" /><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div class="meta"><b>Delivery radius</b><span>How far (km) you'll deliver</span></div>
+          <input id="setRadius" type="number" min="1" max="50" step="1" style="width:80px;padding:8px;" />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const BASE = "https://onam-flowers-api.aanandab44.workers.dev";
+const CONSENT_VERSION = "1.0";
+let token = localStorage.getItem("vendor_token") || "";
+let vendor = null;
+let categories = [];
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function formatRupees(n) {
+  const s = Math.round(n).toString();
+  let head = "", last3 = s;
+  if (s.length > 3) { last3 = s.slice(-3); head = s.slice(0, -3); }
+  const groups = [];
+  while (head.length > 2) { groups.unshift(head.slice(-2)); head = head.slice(0, -2); }
+  if (head) groups.unshift(head);
+  return "₹" + [...groups, last3].join(",");
+}
+
+async function api(method, path, body) {
+  const res = await fetch(BASE + path, {
+    method,
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ("Request failed (" + res.status + ")"));
+  return data;
+}
+
+/* ---------- Login ---------- */
+const loginError = (m) => (document.getElementById("loginError").textContent = m);
+
+document.getElementById("sendOtp").onclick = async () => {
+  const phone = document.getElementById("phone").value.trim();
+  if (phone.length < 10) return loginError("Enter a valid 10-digit phone number");
+  loginError("");
+  try {
+    const r = await api("POST", "/api/vendor/otp", { phone });
+    toast("OTP sent (dev code: " + r.dev_otp + ")");
+    document.getElementById("loginStep1").classList.add("hidden");
+    document.getElementById("loginStep2").classList.remove("hidden");
+  } catch (e) { loginError(e.message); }
+};
+
+document.getElementById("verify").onclick = async () => {
+  const phone = document.getElementById("phone").value.trim();
+  const code = document.getElementById("code").value.trim();
+  if (!document.getElementById("consent").checked) return loginError("Please accept the privacy policy");
+  loginError("");
+  try {
+    const r = await api("POST", "/api/vendor/verify", { phone, code, consent: true, consent_version: CONSENT_VERSION });
+    token = r.token;
+    vendor = r.vendor;
+    localStorage.setItem("vendor_token", token);
+    enterConsole();
+  } catch (e) { loginError(e.message); }
+};
+
+document.getElementById("backToPhone").onclick = () => {
+  document.getElementById("loginStep2").classList.add("hidden");
+  document.getElementById("loginStep1").classList.remove("hidden");
+};
+
+/* ---------- Console ---------- */
+function enterConsole() {
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("shopName").textContent = vendor ? vendor.name : "";
+  loadProducts();
+  loadOrders();
+  loadSettings();
+  loadCategories();
+}
+
+document.getElementById("logout").onclick = () => {
+  token = ""; vendor = null;
+  localStorage.removeItem("vendor_token");
+  location.reload();
+};
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll("nav.tabs button").forEach((btn) => {
+  btn.onclick = () => {
+    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    ["products", "orders", "settings"].forEach((t) =>
+      document.getElementById("tab-" + t).classList.toggle("hidden", t !== btn.dataset.tab)
+    );
+  };
+});
+
+/* ---------- Products ---------- */
+async function loadProducts() {
+  const body = document.getElementById("productsBody");
+  try {
+    const rows = await api("GET", "/api/vendor/products");
+    document.getElementById("productsEmpty").classList.toggle("hidden", rows.length > 0);
+    body.innerHTML = rows.map((p) => `
+      <tr class="${p.hidden ? "hidden-row" : ""}" data-id="${p.id}">
+        <td><div class="prod-name">${escapeHtml(p.name_en)}</div><div class="prod-unit">${escapeHtml(p.unit)}${p.occasion ? " · " + escapeHtml(p.occasion) : ""}</div></td>
+        <td><input type="number" min="0" step="1" value="${p.price}" data-field="price" /></td>
+        <td><input type="number" min="0" step="1" value="${p.stock}" data-field="stock" /></td>
+        <td style="text-align:center">
+          <label class="toggle"><input type="checkbox" ${p.hidden ? "" : "checked"} data-field="hidden" /><span class="slider"></span></label>
+        </td>
+      </tr>`).join("");
+
+    body.querySelectorAll("tr[data-id]").forEach((tr) => {
+      const id = tr.dataset.id;
+      tr.querySelectorAll("input[data-field='price'], input[data-field='stock']").forEach((inp) => {
+        inp.onchange = async () => {
+          const field = inp.dataset.field;
+          const value = Number(inp.value);
+          if (Number.isNaN(value) || value < 0) { toast("Invalid value"); return; }
+          try {
+            await api("PATCH", "/api/vendor/products/" + id, { [field]: value });
+            toast("Saved " + field);
+          } catch (e) { toast(e.message); loadProducts(); }
+        };
+      });
+      tr.querySelectorAll("input[data-field='hidden']").forEach((cb) => {
+        cb.onchange = async () => {
+          try {
+            await api("PATCH", "/api/vendor/products/" + id, { hidden: cb.checked ? 0 : 1 });
+            loadProducts();
+            toast(cb.checked ? "Product visible" : "Product hidden");
+          } catch (e) { toast(e.message); }
+        };
+      });
+    });
+  } catch (e) {
+    body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+document.getElementById("addProduct").onclick = async () => {
+  const name = document.getElementById("pName").value.trim();
+  const price = Number(document.getElementById("pPrice").value);
+  if (!name) return toast("Product name is required");
+  if (Number.isNaN(price) || price < 0) return toast("Enter a valid price");
+  const payload = {
+    name_en: name,
+    name_ml: document.getElementById("pNameMl").value.trim() || undefined,
+    unit: document.getElementById("pUnit").value,
+    price,
+    stock: Number(document.getElementById("pStock").value) || 0,
+    category_id: document.getElementById("pCategory").value || undefined,
+    occasion: document.getElementById("pOccasion").value.trim() || undefined,
+  };
+  try {
+    await api("POST", "/api/vendor/products", payload);
+    ["pName", "pNameMl", "pPrice", "pStock", "pOccasion"].forEach((id) => (document.getElementById(id).value = ""));
+    toast("Product added");
+    loadProducts();
+  } catch (e) { toast(e.message); }
+};
+
+async function loadCategories() {
+  try {
+    categories = await api("GET", "/api/categories");
+    document.getElementById("pCategory").innerHTML =
+      '<option value="">— none —</option>' +
+      categories.map((c) => `<option value="${c.id}">${escapeHtml(c.name_en)}</option>`).join("");
+  } catch (_) {}
+}
+
+/* ---------- Orders ---------- */
+async function loadOrders() {
+  const body = document.getElementById("ordersBody");
+  try {
+    const orders = await api("GET", "/api/vendor/orders");
+    document.getElementById("ordersEmpty").classList.toggle("hidden", orders.length > 0);
+    body.innerHTML = orders.map((o) => {
+      const items = o.items.map((i) => `${i.qty} × ${i.name_en}`).join(", ");
+      const type = o.delivery_type === "vendor" ? "Self-delivery" : "Platform partner";
+      return `
+      <div class="order">
+        <div class="top">
+          <span class="oid">${escapeHtml(o.id)}</span>
+          <span class="badge ${o.status}">${escapeHtml(o.status)}</span>
+        </div>
+        <div class="items">${escapeHtml(items)}</div>
+        <div class="money">${formatRupees(o.total)} &nbsp;·&nbsp; ${o.payment_method === "cod" ? "COD" : escapeHtml(o.payment_method)} &nbsp;·&nbsp; ${type}</div>
+        <div class="items">Deliver to: ${escapeHtml(o.drop_address || "—")}</div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+/* ---------- Settings ---------- */
+async function loadSettings() {
+  try {
+    const v = await api("GET", "/api/vendor/me");
+    vendor = v;
+    document.getElementById("shopName").textContent = v.name;
+    document.getElementById("setOpen").checked = v.is_open;
+    document.getElementById("setOwnDelivery").checked = v.has_own_delivery;
+    document.getElementById("setRadius").value = v.radius_km;
+  } catch (e) { toast(e.message); }
+}
+
+document.getElementById("setOpen").onchange = async (e) => {
+  try { await api("PATCH", "/api/vendor/me", { is_open: e.target.checked }); toast("Shop " + (e.target.checked ? "open" : "closed")); }
+  catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
+};
+document.getElementById("setOwnDelivery").onchange = async (e) => {
+  try { await api("PATCH", "/api/vendor/me", { has_own_delivery: e.target.checked }); toast("Delivery mode updated"); }
+  catch (err) { toast(err.message); e.target.checked = !e.target.checked; }
+};
+document.getElementById("setRadius").onchange = async (e) => {
+  const v = Number(e.target.value);
+  if (Number.isNaN(v) || v < 1) return;
+  try { await api("PATCH", "/api/vendor/me", { radius_km: v }); toast("Radius updated"); }
+  catch (err) { toast(err.message); }
+};
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------- Boot ---------- */
+if (token) {
+  // Validate the stored token by fetching /me; fall back to login if invalid.
+  api("GET", "/api/vendor/me")
+    .then((v) => { vendor = v; enterConsole(); })
+    .catch(() => { token = ""; localStorage.removeItem("vendor_token"); });
+}
+</script>
+</body>
 </html>

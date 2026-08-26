@@ -14,6 +14,7 @@ import * as orderRoutes from "./routes/orders";
 import * as settingsRoutes from "./routes/settings";
 import * as meRoutes from "./routes/me";
 import * as partnerRoutes from "./routes/partners";
+import * as vendorConsoleRoutes from "./routes/vendor";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -58,6 +59,15 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/partner\/orders$/, handler: partnerRoutes.listMine },
   { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/accept$/, handler: partnerRoutes.acceptOrder },
   { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/status$/, handler: partnerRoutes.updateStatus },
+
+  { method: "POST", pattern: /^\/api\/vendor\/otp$/, handler: vendorConsoleRoutes.requestOtp },
+  { method: "POST", pattern: /^\/api\/vendor\/verify$/, handler: vendorConsoleRoutes.verifyOtp },
+  { method: "GET", pattern: /^\/api\/vendor\/me$/, handler: vendorConsoleRoutes.getMe },
+  { method: "PATCH", pattern: /^\/api\/vendor\/me$/, handler: vendorConsoleRoutes.updateMe },
+  { method: "GET", pattern: /^\/api\/vendor\/products$/, handler: vendorConsoleRoutes.listProducts },
+  { method: "POST", pattern: /^\/api\/vendor\/products$/, handler: vendorConsoleRoutes.createProduct },
+  { method: "PATCH", pattern: /^\/api\/vendor\/products\/([^/]+)$/, handler: vendorConsoleRoutes.updateProduct },
+  { method: "GET", pattern: /^\/api\/vendor\/orders$/, handler: vendorConsoleRoutes.listOrders },
 ];
 
 export default {

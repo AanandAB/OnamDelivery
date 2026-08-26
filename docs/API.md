@@ -61,6 +61,20 @@ Partner tokens are JWTs with `role="partner"`; user tokens are rejected here
 - `POST /api/partner/orders/:id/status` (partner) — `{ status, otp? }`; status ladder
   `accepted → picked_up → out_for_delivery → delivered`; `delivered` requires the OTP
 
+## Vendor console (role="vendor")
+Vendor tokens are JWTs with `role="vendor"`; scoped to the vendor's own shop.
+
+- `POST /api/vendor/otp` — `{ phone }` → `{ dev_otp }` (only for a registered vendor phone)
+- `POST /api/vendor/verify` — `{ phone, code, consent, consent_version? }` → `{ token, vendor }`
+- `GET /api/vendor/me` (vendor) — shop profile
+- `PATCH /api/vendor/me` (vendor) — `{ is_open?, has_own_delivery?, radius_km?, name? }`
+- `GET /api/vendor/products` (vendor) — own products incl. hidden
+- `POST /api/vendor/products` (vendor) — add a product (vendor_id is implied)
+- `PATCH /api/vendor/products/:id` (vendor) — edit own product (price/stock/name/hidden)
+- `GET /api/vendor/orders` (vendor) — own order queue
+
+Console UI: https://onam-flowers-admin.pages.dev (Cloudflare Pages).
+
 ## Economics (editable in the `settings` table)
 Fuel reference: ₹116/L ÷ 20 km/L = ₹5.80/km.
 
