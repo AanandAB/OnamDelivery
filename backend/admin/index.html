@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Onam Flowers — Admin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
   :root {
     --rose: #d94f70;
@@ -118,6 +120,7 @@
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 20px; border-radius: 12px; font-size: 0.9rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 50; }
   .toast.show { opacity: 1; }
+  #map { position: relative; z-index: 0; }
 
   @media (max-width: 560px) {
     .grid2 { grid-template-columns: 1fr; }
@@ -182,6 +185,7 @@
 
     <nav class="tabs hidden" id="ownerTabs">
       <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="map">Map</button>
       <button data-tab="vendors">Vendors</button>
       <button data-tab="oorders">Orders</button>
       <button data-tab="partners">Partners</button>
@@ -259,6 +263,9 @@
     </section>
 
     <!-- Owner: manage a vendor's products -->
+    <section id="tab-map" class="hidden">
+      <div class="card"><h2>Live ops map</h2><div class="hint">Vendors (rose) and online delivery partners (blue).</div><div id="map" style="height:440px;border-radius:14px;overflow:hidden;"></div></div>
+    </section>
     <section id="ownerVendorProducts" class="hidden">
       <div class="subview-head">
         <button id="backToVendors">← Back</button>
@@ -388,7 +395,7 @@ document.getElementById("logout").onclick = () => {
 
 /* ---------- Tabs (generic, both navs) ---------- */
 function showTab(name) {
-  const sections = ["products","orders","settings","overview","vendors","oorders","partners","settlements","osettings"];
+  const sections = ["products","orders","settings","overview","map","vendors","oorders","partners","settlements","osettings"];
   sections.forEach((s) => document.getElementById("tab-" + s).classList.add("hidden"));
   document.getElementById("ownerVendorProducts").classList.add("hidden");
   const el = document.getElementById("tab-" + name);
@@ -400,6 +407,7 @@ document.querySelectorAll("nav.tabs").forEach((nav) => {
       nav.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       showTab(btn.dataset.tab);
+      if (btn.dataset.tab === "map") setTimeout(loadMap, 60);
     };
   });
 });
@@ -661,6 +669,29 @@ document.getElementById("saveOwnerSettings").onclick = async () => {
   try { await api("PATCH", "/api/owner/settings", payload); toast("Economics updated"); loadOwnerSettings(); }
   catch (e) { toast(e.message); }
 };
+
+/* ---------- Ops map (Leaflet) ---------- */
+let mapInstance = null;
+async function loadMap() {
+  if (!window.L) return;
+  const [vendors, partners] = await Promise.all([
+    api("GET", "/api/owner/vendors"),
+    api("GET", "/api/owner/partners"),
+  ]).catch(() => [null, null]);
+  if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+
+  mapInstance = L.map("map").setView([11.8745, 75.3704], 13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(mapInstance);
+
+  (vendors || []).forEach((v) => {
+    L.circleMarker([v.lat, v.lng], { radius: 8, color: "#d94f70", fillColor: "#d94f70", fillOpacity: 0.9, weight: 2 })
+      .addTo(mapInstance).bindPopup(`<b>${escapeHtml(v.name)}</b>`);
+  });
+  (partners || []).filter((p) => p.is_online && p.current_lat != null).forEach((p) => {
+    L.circleMarker([p.current_lat, p.current_lng], { radius: 6, color: "#2196F3", fillColor: "#2196F3", fillOpacity: 0.9, weight: 2 })
+      .addTo(mapInstance).bindPopup(`<b>${escapeHtml(p.name || "Partner")}</b>`);
+  });
+}
 
 /* ---------- Boot ---------- */
 if (token && role) {

@@ -18,10 +18,14 @@ export async function getSettings(
   const grievance: Record<string, string> = {};
   for (const r of results) grievance[r.key.replace("grievance_", "")] = r.value;
 
+  const upi = await env.DB.prepare("SELECT value FROM settings WHERE key = 'upi_id'")
+    .first<{ value: string }>();
+
   return json({
     platform_fee: rates.platform_fee,
     delivery_base_fee: rates.delivery_base_fee,
     delivery_rate_per_km: rates.delivery_rate_per_km,
+    upi_id: upi?.value ?? "",
     grievance_officer: grievance,
   });
 }

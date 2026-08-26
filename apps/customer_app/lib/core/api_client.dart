@@ -132,6 +132,18 @@ class ApiClient {
     return TrackInfo.fromJson(res.data as Map<String, dynamic>);
   }
 
+  Future<List<Review>> getVendorReviews(String vendorId) async {
+    final res = await _dio.get('/api/vendors/$vendorId/reviews');
+    return (res.data as List).map((e) => Review.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> submitReview(String orderId, int rating, {String? comment}) async {
+    await _dio.post('/api/orders/$orderId/review', data: {
+      'rating': rating,
+      'comment': ?comment,
+    });
+  }
+
   // ---- Account (DPDP right-to-erasure) ----
   Future<void> deleteAccount() async {
     await _dio.delete('/api/me');

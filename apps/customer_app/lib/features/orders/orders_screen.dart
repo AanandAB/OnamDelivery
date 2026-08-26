@@ -56,12 +56,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   }
 }
 
-class _OrderCard extends StatelessWidget {
+class _OrderCard extends ConsumerWidget {
   final Order order;
   const _OrderCard({required this.order});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeumorphicBox(
@@ -96,6 +96,19 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
               ),
+            if (order.status == 'delivered')
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => _showRatingDialog(context, ref, order),
+                  icon: const Icon(Icons.star_border, size:18),
+                  label: const Text('Rate this order'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.gold,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -124,6 +137,98 @@ class _StatusChip extends StatelessWidget {
         status.replaceAll('_', ' '),
         style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12),
       ),
+    );
+  }
+}
+
+Future<void> _showRatingDialog(BuildContext context, WidgetRef ref, Order order) {
+  return showDialog(
+    context: context,
+    builder: (_) => _RatingDialog(orderId: order.id),
+  );
+}
+
+/// Star-rating dialog — submits a review for a delivered order.
+class _RatingDialog extends ConsumerStatefulWidget {
+  final String orderId;
+  const _RatingDialog({required this.orderId});
+
+  @override
+  ConsumerState<_RatingDialog> createState() => _RatingDialogState();
+}
+
+class _RatingDialogState extends ConsumerState<_RatingDialog> {
+  int _rating = 5;
+  final _commentCtrl = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(apiClientProvider).submitReview(
+            widget.orderId,
+            _rating,
+            comment: _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim(),
+          );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Thanks for your review!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ApiClient.errorMessage(e))),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rate your order'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (i) {
+              final star = i + 1;
+              return IconButton(
+                onPressed: () => setState(() => _rating = star),
+                icon: Icon(
+                  star <= _rating ? Icons.star : Icons.star_border,
+                  color: AppTheme.gold,
+                  size: 32,
+                ),
+              );
+            }),
+          ),
+          TextField(
+            controller: _commentCtrl,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: 'Comment (optional)'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: _busy ? null : _submit,
+          child: _busy
+              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('Submit'),
+        ),
+      ],
     );
   }
 }

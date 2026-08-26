@@ -16,6 +16,7 @@ import * as meRoutes from "./routes/me";
 import * as partnerRoutes from "./routes/partners";
 import * as vendorConsoleRoutes from "./routes/vendor";
 import * as ownerRoutes from "./routes/owner";
+import * as reviewRoutes from "./routes/reviews";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -34,6 +35,7 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/vendors\/([^/]+)$/, handler: vendorRoutes.getVendor },
   { method: "PATCH", pattern: /^\/api\/vendors\/([^/]+)$/, handler: vendorRoutes.updateVendor },
   { method: "GET", pattern: /^\/api\/vendors\/([^/]+)\/products$/, handler: productRoutes.listProducts },
+  { method: "GET", pattern: /^\/api\/vendors\/([^/]+)\/reviews$/, handler: reviewRoutes.listReviews },
 
   { method: "GET", pattern: /^\/api\/products$/, handler: productRoutes.listAllProducts },
   { method: "POST", pattern: /^\/api\/products$/, handler: productRoutes.createProduct },
@@ -49,6 +51,7 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/orders$/, handler: orderRoutes.listOrders },
   { method: "GET", pattern: /^\/api\/orders\/([^/]+)$/, handler: orderRoutes.getOrder },
   { method: "GET", pattern: /^\/api\/orders\/([^/]+)\/track$/, handler: orderRoutes.trackOrder },
+  { method: "POST", pattern: /^\/api\/orders\/([^/]+)\/review$/, handler: reviewRoutes.createReview },
 
   { method: "DELETE", pattern: /^\/api\/me$/, handler: meRoutes.deleteMe },
 

@@ -48,7 +48,8 @@ customers, and delivery partners, plus a company-owner dashboard.
 - **Phase 5** — Vendor console (Pages): catalog, stock, order queue. (DONE)
 - **Phase 6** — Owner dashboard (Pages): ops map, analytics, settlements,
   approvals. (DONE — analytics/settlements/approvals/catalog controls; ops map deferred to polish)
-- **Phase 7** — UPI payments, push notifications, reviews, polish.
+- **Phase 7** — UPI payments, push notifications, reviews, polish. (DONE — UPI
+  intent + reviews + owner ops map; push notifications deferred to a later FCM setup)
 
 ## Flower-business differentiators
 

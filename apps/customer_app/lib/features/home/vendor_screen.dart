@@ -7,7 +7,7 @@ import '../../models/models.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/catalog_provider.dart';
 
-/// Vendor store — its product list, with quick add-to-cart.
+/// Vendor store — rating summary, product list, and customer reviews.
 class VendorScreen extends ConsumerWidget {
   final String vendorId;
   const VendorScreen({super.key, required this.vendorId});
@@ -23,10 +23,113 @@ class VendorScreen extends ConsumerWidget {
       body: productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Could not load products:\n$e', textAlign: TextAlign.center)),
-        data: (products) => ListView.builder(
+        data: (products) => ListView(
           padding: const EdgeInsets.all(16),
-          itemCount: products.length,
-          itemBuilder: (context, i) => _ProductCard(product: products[i], vendorName: vendorName),
+          children: [
+            _RatingHeader(vendor: vendorAsync.value),
+            const SizedBox(height: 8),
+            ...products.map((p) => _ProductCard(product: p, vendorName: vendorName)),
+            const SizedBox(height: 8),
+            _ReviewsSection(vendorId: vendorId),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RatingHeader extends StatelessWidget {
+  final Vendor? vendor;
+  const _RatingHeader({this.vendor});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = vendor?.ratingCount ?? 0;
+    final rating = vendor?.rating ?? 0;
+    return NeumorphicBox(
+      child: Row(
+        children: [
+          const Icon(Icons.storefront, color: AppTheme.rose),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(vendor?.name ?? 'Shop', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 2),
+                Text(
+                  count > 0
+                      ? '★ ${rating.toStringAsFixed(1)} · $count review${count == 1 ? '' : 's'}'
+                      : 'New · no reviews yet',
+                  style: TextStyle(
+                    color: count > 0 ? AppTheme.gold : AppTheme.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewsSection extends ConsumerWidget {
+  final String vendorId;
+  const _ReviewsSection({required this.vendorId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviewsAsync = ref.watch(vendorReviewsProvider(vendorId));
+    return reviewsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (reviews) {
+        if (reviews.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Reviews', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 8),
+            ...reviews.map((r) => _ReviewTile(review: r)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReviewTile extends StatelessWidget {
+  final Review review;
+  const _ReviewTile({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: NeumorphicBox(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  List.filled(review.rating, '★').join(),
+                  style: const TextStyle(color: AppTheme.gold, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 8),
+                Text(review.userName ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            if (review.comment != null && review.comment!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(review.comment!, style: const TextStyle(color: AppTheme.muted)),
+            ],
+          ],
         ),
       ),
     );

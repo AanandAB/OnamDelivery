@@ -44,6 +44,9 @@ Auth: `Authorization: Bearer <token>` (JWT HS256).
 - `GET /api/orders/:id/track` (auth) — live tracking snapshot: status, pickup/drop
   coords, and the assigned partner's live `current_lat/current_lng` (null until
   a partner accepts). Only the order's owner can call it.
+- `POST /api/orders/:id/review` (auth) — `{ rating, comment? }` on a delivered
+  order (one per order); rolls into the vendor's average rating
+- `GET /api/vendors/:id/reviews` (public) — a vendor's reviews
 
 ## Delivery partners
 Partner tokens are JWTs with `role="partner"`; user tokens are rejected here

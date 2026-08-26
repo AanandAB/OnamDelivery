@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../core/geo.dart';
@@ -46,7 +47,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             dropAddress: _addressController.text.trim(),
           );
       ref.read(cartProvider.notifier).clear();
-      if (mounted) _showConfirmation(order);
+      final upiId = ref.read(settingsProvider).value?.upiId ?? '';
+      if (mounted) _showConfirmation(order, upiId);
     } catch (e) {
       setState(() => _error = ApiClient.errorMessage(e));
     } finally {
@@ -54,7 +56,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
-  void _showConfirmation(Order order) {
+  void _showConfirmation(Order order, String upiId) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -82,6 +84,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 4),
             Text('🔑 ${order.otp ?? '—'}',
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.rose)),
+            if (upiId.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final uri = Uri(
+                      scheme: 'upi',
+                      host: 'pay',
+                      queryParameters: {
+                        'pa': upiId,
+                        'pn': 'Onam Flowers',
+                        'am': order.total.toStringAsFixed(0),
+                        'cu': 'INR',
+                        'tn': order.id,
+                      },
+                    );
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                  icon: const Icon(Icons.qr_code_2),
+                  label: Text('Pay ${formatRupees(order.total)} via UPI'),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [

@@ -26,3 +26,8 @@ final vendorProvider = FutureProvider.family<Vendor, String>(
 final settingsProvider = FutureProvider<Settings>((ref) async {
   return ref.watch(apiClientProvider).getSettings();
 });
+
+/// Reviews for a vendor.
+final vendorReviewsProvider = FutureProvider.family<List<Review>, String>(
+  (ref, vendorId) async => ref.watch(apiClientProvider).getVendorReviews(vendorId),
+);

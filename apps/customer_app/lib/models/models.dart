@@ -168,12 +168,14 @@ class Settings {
   final double platformFee;
   final double deliveryBaseFee;
   final double deliveryRatePerKm;
+  final String upiId;
   final Map<String, String> grievanceOfficer;
 
   const Settings({
     required this.platformFee,
     required this.deliveryBaseFee,
     required this.deliveryRatePerKm,
+    required this.upiId,
     required this.grievanceOfficer,
   });
 
@@ -181,6 +183,7 @@ class Settings {
         platformFee: (j['platform_fee'] as num?)?.toDouble() ?? 20,
         deliveryBaseFee: (j['delivery_base_fee'] as num?)?.toDouble() ?? 40,
         deliveryRatePerKm: (j['delivery_rate_per_km'] as num?)?.toDouble() ?? 15,
+        upiId: j['upi_id'] as String? ?? '',
         grievanceOfficer: ((j['grievance_officer'] as Map<String, dynamic>?) ?? {})
             .map((k, v) => MapEntry(k, v.toString())),
       );
@@ -247,5 +250,30 @@ class TrackInfo {
         partner: j['partner'] == null
             ? null
             : TrackPartner.fromJson(j['partner'] as Map<String, dynamic>),
+      );
+}
+
+/// A customer review of a vendor.
+class Review {
+  final String id;
+  final int rating;
+  final String? comment;
+  final String? userName;
+  final int createdAt;
+
+  const Review({
+    required this.id,
+    required this.rating,
+    this.comment,
+    this.userName,
+    required this.createdAt,
+  });
+
+  factory Review.fromJson(Map<String, dynamic> j) => Review(
+        id: j['id'] as String,
+        rating: (j['rating'] as num?)?.toInt() ?? 0,
+        comment: j['comment'] as String?,
+        userName: j['user_name'] as String?,
+        createdAt: (j['created_at'] as num?)?.toInt() ?? 0,
       );
 }
