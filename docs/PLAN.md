@@ -44,7 +44,7 @@ customers, and delivery partners, plus a company-owner dashboard.
 - **Phase 1** — Backend: D1 migrations, Workers API routes, R2 image upload.
 - **Phase 2** — Customer app core: OTP → browse → cart → checkout (COD). (DONE)
 - **Phase 3** — Delivery partner app core: accept → navigate → deliver. (DONE)
-- **Phase 4** — Maps + live tracking: flutter_map + OSRM + breadcrumbs.
+- **Phase 4** — Maps + live tracking: flutter_map + OSRM + breadcrumbs. (DONE)
 - **Phase 5** — Vendor console (Pages): catalog, stock, order queue.
 - **Phase 6** — Owner dashboard (Pages): ops map, analytics, settlements,
   approvals.

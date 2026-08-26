@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:latlong2/latlong.dart';
+
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/orders_provider.dart';
+import 'delivery_map.dart';
 
 /// Order detail — the active trip: pickup → deliver, with live earnings and a
 /// handover-OTP prompt for the final step.
@@ -16,6 +20,7 @@ class OrderDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(ordersProvider);
     final order = _findOrder(state, orderId);
+    final currentPos = ref.watch(locationProvider).position;
 
     if (order == null) {
       return Scaffold(
@@ -50,6 +55,22 @@ class OrderDetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // Live map (active orders with known pickup/drop coordinates).
+          if ((order.status == 'accepted' ||
+                  order.status == 'picked_up' ||
+                  order.status == 'out_for_delivery') &&
+              order.pickupLat != null &&
+              order.pickupLng != null &&
+              order.dropLat != null &&
+              order.dropLng != null) ...[
+            DeliveryMap(
+              pickup: LatLng(order.pickupLat!, order.pickupLng!),
+              drop: LatLng(order.dropLat!, order.dropLng!),
+              current: currentPos,
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Pickup
           _LocationCard(

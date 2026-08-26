@@ -9,6 +9,7 @@ import 'features/checkout/checkout_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/home/vendor_screen.dart';
 import 'features/orders/orders_screen.dart';
+import 'features/orders/track_order_screen.dart';
 import 'features/privacy/privacy_screen.dart';
 import 'features/product/product_detail_screen.dart';
 import 'features/profile/profile_screen.dart';
@@ -33,6 +34,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
       GoRoute(path: '/privacy', builder: (_, _) => const PrivacyScreen()),
+      GoRoute(
+        path: '/track/:orderId',
+        builder: (_, s) => TrackOrderScreen(orderId: s.pathParameters['orderId']!),
+      ),
 
       // Bottom-nav shell: Shops / Cart / Orders / Profile.
       StatefulShellRoute.indexedStack(

@@ -185,3 +185,67 @@ class Settings {
             .map((k, v) => MapEntry(k, v.toString())),
       );
 }
+
+/// Live delivery partner info from the order-tracking endpoint.
+class TrackPartner {
+  final String? name;
+  final String? vehicle;
+  final bool isOnline;
+  final double? currentLat;
+  final double? currentLng;
+
+  const TrackPartner({
+    this.name,
+    this.vehicle,
+    required this.isOnline,
+    this.currentLat,
+    this.currentLng,
+  });
+
+  factory TrackPartner.fromJson(Map<String, dynamic> j) => TrackPartner(
+        name: j['name'] as String?,
+        vehicle: j['vehicle'] as String?,
+        isOnline: (j['is_online'] as bool?) ?? false,
+        currentLat: (j['current_lat'] as num?)?.toDouble(),
+        currentLng: (j['current_lng'] as num?)?.toDouble(),
+      );
+}
+
+/// Live tracking snapshot for one order.
+class TrackInfo {
+  final String id;
+  final String status;
+  final String vendorName;
+  final double? pickupLat;
+  final double? pickupLng;
+  final double? dropLat;
+  final double? dropLng;
+  final String dropAddress;
+  final TrackPartner? partner;
+
+  const TrackInfo({
+    required this.id,
+    required this.status,
+    required this.vendorName,
+    this.pickupLat,
+    this.pickupLng,
+    this.dropLat,
+    this.dropLng,
+    required this.dropAddress,
+    this.partner,
+  });
+
+  factory TrackInfo.fromJson(Map<String, dynamic> j) => TrackInfo(
+        id: j['id'] as String,
+        status: j['status'] as String? ?? 'placed',
+        vendorName: j['vendor_name'] as String? ?? 'Vendor',
+        pickupLat: (j['pickup_lat'] as num?)?.toDouble(),
+        pickupLng: (j['pickup_lng'] as num?)?.toDouble(),
+        dropLat: (j['drop_lat'] as num?)?.toDouble(),
+        dropLng: (j['drop_lng'] as num?)?.toDouble(),
+        dropAddress: j['drop_address'] as String? ?? '',
+        partner: j['partner'] == null
+            ? null
+            : TrackPartner.fromJson(j['partner'] as Map<String, dynamic>),
+      );
+}

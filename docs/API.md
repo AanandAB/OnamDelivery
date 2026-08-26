@@ -41,6 +41,9 @@ Auth: `Authorization: Bearer <token>` (JWT HS256).
   drop_address, payment_method?, coupon_code? }` → order with full money breakdown
 - `GET /api/orders` (auth) — current user's orders
 - `GET /api/orders/:id` (auth) — single order
+- `GET /api/orders/:id/track` (auth) — live tracking snapshot: status, pickup/drop
+  coords, and the assigned partner's live `current_lat/current_lng` (null until
+  a partner accepts). Only the order's owner can call it.
 
 ## Delivery partners
 Partner tokens are JWTs with `role="partner"`; user tokens are rejected here

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/geo.dart';
 import '../../core/theme.dart';
@@ -80,6 +81,21 @@ class _OrderCard extends StatelessWidget {
                 style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
             if (order.otp != null)
               Text('OTP: ${order.otp}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.rose)),
+            if (order.deliveryType == 'platform' &&
+                order.status != 'delivered' &&
+                order.status != 'cancelled')
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => context.push('/track/${order.id}'),
+                  icon: const Icon(Icons.location_on_outlined, size: 18),
+                  label: const Text('Track live'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.rose,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

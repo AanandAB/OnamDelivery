@@ -127,6 +127,11 @@ class ApiClient {
     return (res.data as List).map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<TrackInfo> trackOrder(String id) async {
+    final res = await _dio.get('/api/orders/$id/track');
+    return TrackInfo.fromJson(res.data as Map<String, dynamic>);
+  }
+
   // ---- Account (DPDP right-to-erasure) ----
   Future<void> deleteAccount() async {
     await _dio.delete('/api/me');

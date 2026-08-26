@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
 import '../models/models.dart';
+import 'location_provider.dart';
 
 /// Orders + online state for the delivery partner.
 class OrdersState {
@@ -67,6 +68,8 @@ class OrdersNotifier extends Notifier<OrdersState> {
         available: avail,
         mine: mine,
       );
+      // Resume GPS streaming if we were already online (e.g. app restart).
+      if (me.isOnline) await ref.read(locationProvider.notifier).start();
     } catch (e) {
       state = state.copyWith(loading: false, error: ApiClient.errorMessage(e));
     }
@@ -77,6 +80,12 @@ class OrdersNotifier extends Notifier<OrdersState> {
     try {
       final p = await _api.updateMe(isOnline: on);
       state = state.copyWith(isOnline: p.isOnline, error: null);
+      // Online → stream GPS breadcrumbs; offline → stop.
+      if (on) {
+        await ref.read(locationProvider.notifier).start();
+      } else {
+        await ref.read(locationProvider.notifier).stop();
+      }
     } catch (e) {
       state = state.copyWith(error: ApiClient.errorMessage(e));
     }

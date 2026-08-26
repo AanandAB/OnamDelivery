@@ -46,6 +46,7 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/api\/orders$/, handler: orderRoutes.createOrder },
   { method: "GET", pattern: /^\/api\/orders$/, handler: orderRoutes.listOrders },
   { method: "GET", pattern: /^\/api\/orders\/([^/]+)$/, handler: orderRoutes.getOrder },
+  { method: "GET", pattern: /^\/api\/orders\/([^/]+)\/track$/, handler: orderRoutes.trackOrder },
 
   { method: "DELETE", pattern: /^\/api\/me$/, handler: meRoutes.deleteMe },
 

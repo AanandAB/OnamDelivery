@@ -190,3 +190,56 @@ export async function getOrder(
   if (!order) return error("Order not found", 404);
   return json(order);
 }
+
+/** GET /api/orders/:id/track (auth) — live tracking data for the customer. */
+export async function trackOrder(
+  req: Request,
+  env: Env,
+  _url: URL,
+  params: string[],
+): Promise<Response> {
+  const auth = await requireAuth(req, env);
+  if (auth instanceof Response) return auth;
+
+  const order = await env.DB.prepare(
+    `SELECT o.*, v.name AS vendor_name, v.lat AS vendor_lat, v.lng AS vendor_lng
+     FROM orders o JOIN vendors v ON v.id = o.vendor_id
+     WHERE o.id = ?1 AND o.user_id = ?2`,
+  )
+    .bind(params[0], auth.userId)
+    .first<Record<string, unknown>>();
+  if (!order) return error("Order not found", 404);
+
+  // Live partner position (platform delivery only).
+  let partner: Record<string, unknown> | null = null;
+  if (order.partner_id) {
+    const p = await env.DB.prepare(
+      "SELECT name, vehicle, is_online, current_lat, current_lng FROM partners WHERE id = ?1",
+    )
+      .bind(order.partner_id as string)
+      .first<Record<string, unknown>>();
+    if (p) {
+      partner = {
+        name: p.name,
+        vehicle: p.vehicle,
+        is_online: (p.is_online as number) === 1,
+        current_lat: p.current_lat,
+        current_lng: p.current_lng,
+      };
+    }
+  }
+
+  return json({
+    id: order.id,
+    status: order.status,
+    vendor_name: order.vendor_name,
+    // Fall back to the vendor's location for orders placed before pickup
+    // coordinates were captured.
+    pickup_lat: order.pickup_lat ?? order.vendor_lat,
+    pickup_lng: order.pickup_lng ?? order.vendor_lng,
+    drop_lat: order.drop_lat,
+    drop_lng: order.drop_lng,
+    drop_address: order.drop_address,
+    partner,
+  });
+}
