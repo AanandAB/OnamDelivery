@@ -12,6 +12,7 @@ import * as productRoutes from "./routes/products";
 import * as couponRoutes from "./routes/coupons";
 import * as orderRoutes from "./routes/orders";
 import * as settingsRoutes from "./routes/settings";
+import * as meRoutes from "./routes/me";
 
 type Handler = (req: Request, env: Env, url: URL, params: string[]) => Promise<Response>;
 
@@ -44,6 +45,8 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/api\/orders$/, handler: orderRoutes.createOrder },
   { method: "GET", pattern: /^\/api\/orders$/, handler: orderRoutes.listOrders },
   { method: "GET", pattern: /^\/api\/orders\/([^/]+)$/, handler: orderRoutes.getOrder },
+
+  { method: "DELETE", pattern: /^\/api\/me$/, handler: meRoutes.deleteMe },
 ];
 
 export default {
