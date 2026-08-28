@@ -82,12 +82,12 @@ export default function CartPage() {
         <p className="mt-1 text-xs text-muted">
           Delivery fee is calculated at checkout based on your location.
         </p>
-        <button
-          disabled
-          className="mt-4 w-full cursor-not-allowed rounded-full bg-cream-dark py-3 font-semibold text-muted"
+        <Link
+          href="/checkout"
+          className="mt-4 block w-full rounded-full bg-rose py-3 text-center font-semibold text-white transition-colors hover:bg-rose-dark"
         >
-          Checkout — coming next
-        </button>
+          Proceed to checkout
+        </Link>
       </div>
     </div>
   );

@@ -47,7 +47,9 @@ export default function LoginPage() {
     try {
       const r = await verifyOtp(phone.trim(), code.trim(), consent);
       login(r.token, r.user);
-      router.push("/");
+      const next =
+        new URLSearchParams(window.location.search).get("next") || "/";
+      router.push(next);
     } catch (e) {
       setError((e as Error).message);
     } finally {

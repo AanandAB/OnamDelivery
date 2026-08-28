@@ -186,6 +186,23 @@ export function getSettings(): Promise<Settings> {
   return request<Settings>("/api/settings");
 }
 
+export function validateCoupon(
+  code: string,
+  phone: string,
+  subtotal: number,
+): Promise<{
+  valid: boolean;
+  code: string;
+  type: string;
+  value: number;
+  discount: number;
+}> {
+  return request("/api/coupons/validate", {
+    method: "POST",
+    body: JSON.stringify({ code, phone, subtotal }),
+  });
+}
+
 export async function requestOtp(phone: string): Promise<string> {
   const res = await request<{ ok: boolean; dev_otp?: string; note?: string }>(
     "/api/auth/otp",

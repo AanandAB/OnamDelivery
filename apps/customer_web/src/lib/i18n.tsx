@@ -54,6 +54,41 @@ interface Dict {
     reviewsEmpty: string;
   };
   footer: { privacy: string; rights: string; tagline: string };
+  checkout: {
+    title: string;
+    summary: string;
+    signIn: string;
+    signInPrompt: string;
+    empty: string;
+    subtotal: string;
+    deliveryFee: string;
+    serviceFee: string;
+    discount: string;
+    total: string;
+    distance: string;
+    locationTitle: string;
+    shareLocation: string;
+    locating: string;
+    pinHint: string;
+    locationError: string;
+    locationRequired: string;
+    address: string;
+    addressPlaceholder: string;
+    addressRequired: string;
+    coupon: string;
+    couponPlaceholder: string;
+    apply: string;
+    couponApplied: string;
+    payment: string;
+    cod: string;
+    codNote: string;
+    placeOrder: string;
+    placing: string;
+    success: string;
+    successSub: string;
+    track: string;
+    browse: string;
+  };
 }
 
 const dict: Record<Lang, Dict> = {
@@ -113,6 +148,41 @@ const dict: Record<Lang, Dict> = {
       rights: "All rights reserved.",
       tagline: "Fresh Onam flowers, delivered across Kannur.",
     },
+    checkout: {
+      title: "Checkout",
+      summary: "Order summary",
+      signIn: "Sign in to continue",
+      signInPrompt: "You need to sign in before placing your order.",
+      empty: "Your cart is empty.",
+      subtotal: "Subtotal",
+      deliveryFee: "Delivery fee",
+      serviceFee: "Service fee",
+      discount: "Coupon discount",
+      total: "Total",
+      distance: "km away",
+      locationTitle: "Delivery location",
+      shareLocation: "📍 Share my location",
+      locating: "Getting location…",
+      pinHint: "Or drop a pin on the map",
+      locationError: "Couldn't get your location — allow access or drop a pin.",
+      locationRequired: "Please share your delivery location",
+      address: "Delivery address",
+      addressPlaceholder: "House name, street, area, pincode",
+      addressRequired: "Please enter a delivery address",
+      coupon: "Coupon code",
+      couponPlaceholder: "e.g. ONAM-ABC123",
+      apply: "Apply",
+      couponApplied: "Coupon applied",
+      payment: "Payment",
+      cod: "Cash on delivery",
+      codNote: "Pay when your flowers arrive.",
+      placeOrder: "Place order",
+      placing: "Placing…",
+      success: "Order placed! 🎉",
+      successSub: "Your order is confirmed.",
+      track: "Track my order",
+      browse: "Continue shopping",
+    },
   },
   ml: {
     brand: "ഓണം ഡെലിവറി",
@@ -169,6 +239,41 @@ const dict: Record<Lang, Dict> = {
       privacy: "സ്വകാര്യതാ നയം",
       rights: "എല്ലാ അവകാശങ്ങളും നിക്ഷിപ്തം.",
       tagline: "കണ്ണൂരിലുടനീളം പുത്തൻ ഓണപ്പൂക്കൾ എത്തിക്കുന്നു.",
+    },
+    checkout: {
+      title: "ചെക്ക്ഔട്ട്",
+      summary: "ഓർഡർ സംഗ്രഹം",
+      signIn: "തുടരാൻ സൈൻ ഇൻ ചെയ്യുക",
+      signInPrompt: "ഓർഡർ നൽകുന്നതിന് മുമ്പ് സൈൻ ഇൻ ചെയ്യേണ്ടതുണ്ട്.",
+      empty: "നിങ്ങളുടെ കാർട്ട് ശൂന്യമാണ്.",
+      subtotal: "സബ്ടോട്ടൽ",
+      deliveryFee: "ഡെലിവറി ഫീസ്",
+      serviceFee: "സേവന ഫീസ്",
+      discount: "കൂപ്പൺ കിഴിവ്",
+      total: "ആകെ",
+      distance: "km അകലെ",
+      locationTitle: "ഡെലിവറി സ്ഥാനം",
+      shareLocation: "📍 എന്റെ സ്ഥാനം പങ്കിടുക",
+      locating: "സ്ഥാനം കണ്ടെത്തുന്നു…",
+      pinHint: "അല്ലെങ്കിൽ മാപ്പിൽ പിൻ ഇടുക",
+      locationError: "സ്ഥാനം ലഭിച്ചില്ല — അനുമതി നൽകുക അല്ലെങ്കിൽ പിൻ ഇടുക.",
+      locationRequired: "ഡെലിവറി സ്ഥാനം പങ്കിടുക",
+      address: "ഡെലിവറി വിലാസം",
+      addressPlaceholder: "വീടിന്റെ പേര്, തെരുവ്, പ്രദേശം, പിൻകോഡ്",
+      addressRequired: "ഡെലിവറി വിലാസം നൽകുക",
+      coupon: "കൂപ്പൺ കോഡ്",
+      couponPlaceholder: "ഉദാ: ONAM-ABC123",
+      apply: "പ്രയോഗിക്കുക",
+      couponApplied: "കൂപ്പൺ പ്രയോഗിച്ചു",
+      payment: "പേയ്മെന്റ്",
+      cod: "ഡെലിവറിയിൽ പണം",
+      codNote: "പൂക്കൾ എത്തുമ്പോൾ പണം നൽകുക.",
+      placeOrder: "ഓർഡർ നൽകുക",
+      placing: "നൽകുന്നു…",
+      success: "ഓർഡർ നൽകി! 🎉",
+      successSub: "നിങ്ങളുടെ ഓർഡർ സ്ഥിരീകരിച്ചു.",
+      track: "ഓർഡർ ട്രാക്ക് ചെയ്യുക",
+      browse: "തുടർന്ന് ഷോപ്പിംഗ്",
     },
   },
 };
