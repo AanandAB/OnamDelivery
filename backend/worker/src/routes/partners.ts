@@ -10,6 +10,7 @@ import type { Env } from "../env";
 import { json, error, readBody, requireString } from "../lib/http";
 import { issueOtp, checkOtp, signToken, secret, requirePartner } from "../lib/auth";
 import { id } from "../lib/id";
+import { assignNearest, settleExpiredOffers } from "../lib/assign";
 
 interface PartnerRow {
   id: string;
@@ -211,7 +212,7 @@ const ORDER_SELECT = `
   FROM orders o JOIN vendors v ON v.id = o.vendor_id
 `;
 
-/** GET /api/partner/orders/available — unclaimed platform orders (oldest first). */
+/** GET /api/partner/orders/available — my active offers + the open pool. */
 export async function listAvailable(
   req: Request,
   env: Env,
@@ -220,10 +221,34 @@ export async function listAvailable(
 ): Promise<Response> {
   const auth = await requirePartner(req, env);
   if (auth instanceof Response) return auth;
-  const { results } = await env.DB.prepare(
-    `${ORDER_SELECT} WHERE o.status = 'placed' AND o.delivery_type = 'platform' AND o.partner_id IS NULL ORDER BY o.created_at ASC`,
+
+  // First escalate any lapsed offers so the next-nearest partner gets them.
+  await settleExpiredOffers(env);
+  const now = Math.floor(Date.now() / 1000);
+
+  // Offers directed at ME, still inside their acceptance window.
+  const offers = await env.DB.prepare(
+    `${ORDER_SELECT} WHERE o.status = 'placed' AND o.delivery_type = 'platform'
+       AND o.partner_id IS NULL AND o.offered_partner_id = ?1 AND o.offer_expires_at > ?2
+     ORDER BY o.created_at ASC`,
+  )
+    .bind(auth.partnerId, now)
+    .all<Record<string, unknown>>();
+
+  // The open pool — unassigned orders any partner can pull.
+  const pool = await env.DB.prepare(
+    `${ORDER_SELECT} WHERE o.status = 'placed' AND o.delivery_type = 'platform'
+       AND o.partner_id IS NULL AND o.offered_partner_id IS NULL
+     ORDER BY o.created_at ASC`,
   ).all<Record<string, unknown>>();
-  return json(results.map(orderJson));
+
+  return json({
+    offers: offers.results.map((o) => ({
+      ...orderJson(o),
+      offer_expires_in: Math.max(0, ((o.offer_expires_at as number) ?? 0) - now),
+    })),
+    pool: pool.results.map(orderJson),
+  });
 }
 
 /** GET /api/partner/orders — my assigned orders (any status). */
@@ -243,7 +268,7 @@ export async function listMine(
   return json(results.map(orderJson));
 }
 
-/** POST /api/partner/orders/:id/accept — atomically claim an unassigned order. */
+/** POST /api/partner/orders/:id/accept — atomically claim an order. */
 export async function acceptOrder(
   req: Request,
   env: Env,
@@ -255,12 +280,16 @@ export async function acceptOrder(
   const orderId = params[0];
   const now = Math.floor(Date.now() / 1000);
 
-  // The WHERE clause makes the claim atomic — two partners can't both win.
+  // Atomic claim. Acceptable if (a) the order is in the open pool, or (b) it's
+  // currently offered to THIS partner and the window hasn't expired. Any other
+  // partner grabbing a reserved order gets 0 changes → 409.
   const res = await env.DB.prepare(
-    `UPDATE orders SET partner_id = ?1, status = 'accepted', updated_at = ?2
-     WHERE id = ?3 AND status = 'placed' AND delivery_type = 'platform' AND partner_id IS NULL`,
+    `UPDATE orders SET partner_id = ?1, status = 'accepted',
+       offered_partner_id = NULL, offer_expires_at = NULL, updated_at = ?2
+     WHERE id = ?3 AND status = 'placed' AND delivery_type = 'platform' AND partner_id IS NULL
+       AND (offered_partner_id IS NULL OR (offered_partner_id = ?4 AND offer_expires_at > ?2))`,
   )
-    .bind(auth.partnerId, now, orderId)
+    .bind(auth.partnerId, now, orderId, auth.partnerId)
     .run();
   if (res.meta.changes === 0) return error("Order unavailable or already claimed", 409);
 
@@ -268,6 +297,29 @@ export async function acceptOrder(
     .bind(orderId)
     .first<Record<string, unknown>>();
   return json(orderJson(row!));
+}
+
+/** POST /api/partner/orders/:id/decline — pass on an offer; escalates to the next. */
+export async function declineOrder(
+  req: Request,
+  env: Env,
+  _url: URL,
+  params: string[],
+): Promise<Response> {
+  const auth = await requirePartner(req, env);
+  if (auth instanceof Response) return auth;
+  const orderId = params[0];
+
+  const order = await env.DB.prepare(
+    "SELECT id FROM orders WHERE id = ?1 AND partner_id IS NULL AND offered_partner_id = ?2",
+  )
+    .bind(orderId, auth.partnerId)
+    .first();
+  if (!order) return error("No active offer to decline", 409);
+
+  // Roll the offer to the next-nearest online partner, excluding this one.
+  await assignNearest(env, orderId, [auth.partnerId]);
+  return json({ ok: true });
 }
 
 // Linear fulfilment flow. "delivered" additionally requires the handover OTP.

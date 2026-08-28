@@ -131,7 +131,10 @@ class OrderDetailScreen extends ConsumerWidget {
     for (final o in state.mine) {
       if (o.id == id) return o;
     }
-    for (final o in state.available) {
+    for (final o in state.offers) {
+      if (o.id == id) return o;
+    }
+    for (final o in state.pool) {
       if (o.id == id) return o;
     }
     return null;

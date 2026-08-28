@@ -97,11 +97,17 @@ class ApiClient {
   }
 
   // ---- Orders ----
-  Future<List<PartnerOrder>> getAvailableOrders() async {
+  Future<({List<PartnerOrder> offers, List<PartnerOrder> pool})> getAvailableOrders() async {
     final res = await _dio.get('/api/partner/orders/available');
-    return (res.data as List)
-        .map((e) => PartnerOrder.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final data = res.data as Map<String, dynamic>;
+    return (
+      offers: ((data['offers'] as List?) ?? const [])
+          .map((e) => PartnerOrder.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      pool: ((data['pool'] as List?) ?? const [])
+          .map((e) => PartnerOrder.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
   }
 
   Future<List<PartnerOrder>> getMyOrders() async {
@@ -114,6 +120,10 @@ class ApiClient {
   Future<PartnerOrder> acceptOrder(String id) async {
     final res = await _dio.post('/api/partner/orders/$id/accept');
     return PartnerOrder.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<void> declineOrder(String id) async {
+    await _dio.post('/api/partner/orders/$id/decline');
   }
 
   Future<PartnerOrder> updateStatus(String id, String status, {String? otp}) async {

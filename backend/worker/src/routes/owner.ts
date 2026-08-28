@@ -8,6 +8,7 @@ import type { Env } from "../env";
 import { json, error, readBody, requireString, requireNumber } from "../lib/http";
 import { issueOtp, checkOtp, signToken, secret, requireOwner } from "../lib/auth";
 import { id } from "../lib/id";
+import { assignNearest, settleExpiredOffers } from "../lib/assign";
 
 const DEFAULT_OWNER_PHONE = "9747000000";
 
@@ -312,7 +313,7 @@ export async function updateProduct(
 }
 
 // ---- Orders ----
-/** GET /api/owner/orders — all orders (newest first). */
+/** GET /api/owner/orders — all orders (newest first), with partner + assignment state. */
 export async function listOrders(
   req: Request,
   env: Env,
@@ -321,12 +322,79 @@ export async function listOrders(
 ): Promise<Response> {
   const auth = await requireOwner(req, env);
   if (auth instanceof Response) return auth;
+  await settleExpiredOffers(env); // keep assignment state fresh for the admin
   const { results } = await env.DB.prepare(
-    `SELECT o.*, v.name AS vendor_name
-     FROM orders o JOIN vendors v ON v.id = o.vendor_id
+    `SELECT o.*, v.name AS vendor_name, p.name AS partner_name, p.is_online AS partner_online
+     FROM orders o
+     JOIN vendors v ON v.id = o.vendor_id
+     LEFT JOIN partners p ON p.id = o.partner_id
      ORDER BY o.created_at DESC LIMIT 100`,
   ).all();
   return json(results);
+}
+
+/** POST /api/owner/orders/:id/assign { partner_id } — force-assign (or reassign) a platform order. */
+export async function assignOrder(
+  req: Request,
+  env: Env,
+  _url: URL,
+  params: string[],
+): Promise<Response> {
+  const auth = await requireOwner(req, env);
+  if (auth instanceof Response) return auth;
+  const orderId = params[0];
+  const body = await readBody(req);
+  const partnerId = requireString(body, "partner_id");
+  if (partnerId instanceof Response) return partnerId;
+
+  const order = await env.DB.prepare("SELECT id, delivery_type FROM orders WHERE id = ?1")
+    .bind(orderId)
+    .first<{ id: string; delivery_type: string }>();
+  if (!order) return error("Order not found", 404);
+  if (order.delivery_type !== "platform") return error("Only platform orders can be assigned", 400);
+
+  const partner = await env.DB.prepare("SELECT id FROM partners WHERE id = ?1")
+    .bind(partnerId)
+    .first();
+  if (!partner) return error("Partner not found", 404);
+
+  const now = Math.floor(Date.now() / 1000);
+  const res = await env.DB.prepare(
+    `UPDATE orders SET partner_id = ?1, offered_partner_id = NULL, offer_expires_at = NULL,
+       status = CASE WHEN status = 'placed' THEN 'accepted' ELSE status END, updated_at = ?2
+     WHERE id = ?3 AND status NOT IN ('delivered', 'cancelled')`,
+  )
+    .bind(partnerId, now, orderId)
+    .run();
+  if (res.meta.changes === 0) return error("Order already delivered or cancelled", 409);
+
+  const row = await env.DB.prepare("SELECT * FROM orders WHERE id = ?1").bind(orderId).first();
+  return json(row);
+}
+
+/** POST /api/owner/orders/:id/unassign — release a claimed order back to auto-assignment. */
+export async function unassignOrder(
+  req: Request,
+  env: Env,
+  _url: URL,
+  params: string[],
+): Promise<Response> {
+  const auth = await requireOwner(req, env);
+  if (auth instanceof Response) return auth;
+  const orderId = params[0];
+
+  const res = await env.DB.prepare(
+    `UPDATE orders SET partner_id = NULL, offered_partner_id = NULL, offer_expires_at = NULL,
+       status = CASE WHEN status = 'accepted' THEN 'placed' ELSE status END, updated_at = ?1
+     WHERE id = ?2 AND status NOT IN ('delivered', 'cancelled')`,
+  )
+    .bind(Math.floor(Date.now() / 1000), orderId)
+    .run();
+  if (res.meta.changes === 0) return error("Order not found or already delivered/cancelled", 409);
+
+  await assignNearest(env, orderId);
+  const row = await env.DB.prepare("SELECT * FROM orders WHERE id = ?1").bind(orderId).first();
+  return json(row);
 }
 
 // ---- Partners ----

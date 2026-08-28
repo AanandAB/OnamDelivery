@@ -62,6 +62,7 @@ const routes: Route[] = [
   { method: "GET", pattern: /^\/api\/partner\/orders\/available$/, handler: partnerRoutes.listAvailable },
   { method: "GET", pattern: /^\/api\/partner\/orders$/, handler: partnerRoutes.listMine },
   { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/accept$/, handler: partnerRoutes.acceptOrder },
+  { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/decline$/, handler: partnerRoutes.declineOrder },
   { method: "POST", pattern: /^\/api\/partner\/orders\/([^/]+)\/status$/, handler: partnerRoutes.updateStatus },
 
   { method: "POST", pattern: /^\/api\/vendor\/otp$/, handler: vendorConsoleRoutes.requestOtp },
@@ -87,6 +88,8 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/api\/owner\/vendors\/([^/]+)\/products$/, handler: ownerRoutes.createProduct },
   { method: "PATCH", pattern: /^\/api\/owner\/products\/([^/]+)$/, handler: ownerRoutes.updateProduct },
   { method: "GET", pattern: /^\/api\/owner\/orders$/, handler: ownerRoutes.listOrders },
+  { method: "POST", pattern: /^\/api\/owner\/orders\/([^/]+)\/assign$/, handler: ownerRoutes.assignOrder },
+  { method: "POST", pattern: /^\/api\/owner\/orders\/([^/]+)\/unassign$/, handler: ownerRoutes.unassignOrder },
   { method: "GET", pattern: /^\/api\/owner\/partners$/, handler: ownerRoutes.listPartners },
   { method: "PATCH", pattern: /^\/api\/owner\/partners\/([^/]+)$/, handler: ownerRoutes.updatePartner },
   { method: "GET", pattern: /^\/api\/owner\/settlements$/, handler: ownerRoutes.settlements },

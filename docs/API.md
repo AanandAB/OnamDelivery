@@ -58,9 +58,15 @@ Partner tokens are JWTs with `role="partner"`; user tokens are rejected here
 - `GET /api/partner/me` (partner) — profile + `is_online`
 - `PATCH /api/partner/me` (partner) — `{ is_online?, current_lat?, current_lng?, name?, vehicle? }`;
   location updates also append a `partner_locations` breadcrumb
-- `GET /api/partner/orders/available` (partner) — unclaimed platform orders
+- `GET /api/partner/orders/available` (partner) — `{ offers:[], pool:[] }`:
+  `offers` are auto-assigned to THIS partner (nearest-first, 60s accept window,
+  each with `offer_expires_in` seconds); `pool` is the open unassigned queue any
+  partner can still pull
 - `GET /api/partner/orders` (partner) — my assigned orders
-- `POST /api/partner/orders/:id/accept` (partner) — atomic claim
+- `POST /api/partner/orders/:id/accept` (partner) — atomic claim (a directed
+  offer OR an open-pool order; reserved orders 409 for anyone else)
+- `POST /api/partner/orders/:id/decline` (partner) — pass on an offer; it rolls
+  to the next-nearest online partner
 - `POST /api/partner/orders/:id/status` (partner) — `{ status, otp? }`; status ladder
   `accepted → picked_up → out_for_delivery → delivered`; `delivered` requires the OTP
 
@@ -75,6 +81,12 @@ Vendor tokens are JWTs with `role="vendor"`; scoped to the vendor's own shop.
 - `POST /api/vendor/products` (vendor) — add a product (vendor_id is implied)
 - `PATCH /api/vendor/products/:id` (vendor) — edit own product (price/stock/name/hidden)
 - `GET /api/vendor/orders` (vendor) — own order queue
+- `GET /api/vendor/drivers` (vendor) — own self-delivery boys + live position
+- `POST /api/vendor/drivers` (vendor) — onboard a delivery boy (`{ name, phone? }`)
+  → returns a `tracking_url` to send them (their phone shares GPS via that link)
+- `DELETE /api/vendor/drivers/:id` (vendor) — remove a delivery boy
+- `POST /api/track-driver` (public) — a driver's phone posts `{ token, lat, lng }`
+  to update its live position
 
 Console UI: https://onam-flowers-admin.pages.dev (Cloudflare Pages).
 
@@ -89,7 +101,14 @@ default `9747000000`). Full read/write across every vendor + the platform.
 - `GET/POST /api/owner/vendors`, `PATCH /api/owner/vendors/:id` — manage vendors
 - `GET/POST /api/owner/vendors/:id/products`, `PATCH /api/owner/products/:id` —
   manage ANY vendor's catalog (edit any stock/price)
-- `GET /api/owner/orders` — all orders
+- `GET /api/owner/orders` — all orders (includes `partner_id`, `partner_name`,
+  `offered_partner_id`, `offer_expires_at` for assignment state)
+- `POST /api/owner/orders/:id/assign` — `{ partner_id }` force-assign (or reassign)
+  a platform order, cancelling any outstanding offer
+- `POST /api/owner/orders/:id/unassign` — release back to auto-assignment
+- `GET /api/owner/analytics` — chart data: `status_counts`, `top_vendors`,
+  `top_products`, and 14-day `daily` buckets (orders/revenue/profit)
+- `GET /api/owner/drivers` — all vendor self-delivery boys (for the ops map)
 - `GET /api/owner/partners`, `PATCH /api/owner/partners/:id` — approve partners (kyc)
 - `GET /api/owner/settlements` — per-vendor payout summary
 - `GET/PATCH /api/owner/settings` — edit the delivery economics rates
@@ -111,10 +130,23 @@ vendor keeps `subtotal`; partner earns `delivery_pay`; platform keeps
 delivery_type is `vendor`, delivery_pay is 0 (vendor uses their own boy).
 
 ## Data model (D1 — `onam-flowers-db`)
-13 tables: users, addresses, vendors, categories, products, partners,
-partner_locations, orders, reviews, coupons, settlements, otp_codes, settings.
+14 tables: users, addresses, vendors, categories, products, partners,
+partner_locations, orders, reviews, coupons, settlements, otp_codes, settings,
+vendor_drivers.
+
+## Assignment model (Phase 9)
+Platform orders (`delivery_type="platform"`) are auto-offered to the NEAREST
+online partner for 60s. On decline or timeout the offer rolls to the
+next-nearest (lazy escalation on partner poll — no cron needed). If nobody is
+online the order sits in the open pool. The owner can force-assign/reassign or
+unassign any order from the admin console. Vendor self-delivery orders
+(`delivery_type="vendor"`) are never auto-assigned — the vendor tracks their
+own boy via `vendor_drivers`.
 
 ## Notes
-- Schema: `migrations/0001_initial.sql` + `0002_economics.sql`; seed in `seed.sql`.
+- OTP provider is pluggable (`OTP_PROVIDER`): `dev` (code returned in the
+  response) or `whatsapp` (WhatsApp Cloud API — free auth templates). See
+  `src/lib/otp.ts`.
+- Schema: `migrations/0001_initial.sql` … `0009_assignment.sql`.
 - R2 image upload is PENDING — R2 is not enabled on the Cloudflare account yet.
   Images use an `image_url` string field for now.

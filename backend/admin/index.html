@@ -623,19 +623,63 @@ document.getElementById("ovpAdd").onclick = async () => {
   } catch (e) { toast(e.message); }
 };
 
+let partnersCache = [];
+function assignmentLabel(o) {
+  if (o.delivery_type === "vendor") return '<span class="badge pending">Self</span>';
+  if (o.partner_id) {
+    const dot = o.partner_online ? "🟢" : "⚪";
+    return `${dot} <b>${escapeHtml(o.partner_name || "Partner")}</b>`;
+  }
+  if (o.offered_partner_id) {
+    const p = partnersCache.find((x) => x.id === o.offered_partner_id);
+    return `<span class="badge placed">Offering → ${escapeHtml(p ? (p.name || p.phone) : "…")}</span>`;
+  }
+  return '<span class="badge cancelled">Unassigned</span>';
+}
+
 async function loadOwnerOrders() {
   const body = document.getElementById("ownerOrdersBody");
   try {
-    const rows = await api("GET", "/api/owner/orders");
-    body.innerHTML = `<table><thead><tr><th>Order</th><th>Shop</th><th>Status</th><th>Total</th><th>Delivery</th></tr></thead><tbody>` +
+    const [rows, partners] = await Promise.all([
+      api("GET", "/api/owner/orders"),
+      api("GET", "/api/owner/partners"),
+    ]);
+    partnersCache = partners;
+    const isActive = (o) => o.delivery_type === "platform" && o.status !== "delivered" && o.status !== "cancelled";
+
+    body.innerHTML = `<table><thead><tr><th>Order</th><th>Shop</th><th>Status</th><th>Total</th><th>Assignment</th><th>Override</th></tr></thead><tbody>` +
       rows.map((o) => `
         <tr>
           <td><b>${escapeHtml(o.id)}</b></td>
           <td>${escapeHtml(o.vendor_name)}</td>
           <td><span class="badge ${o.status}">${escapeHtml(o.status)}</span></td>
           <td><b>${formatRupees(o.total)}</b></td>
-          <td>${o.delivery_type === "vendor" ? "Self" : "Partner"}</td>
+          <td>${assignmentLabel(o)}</td>
+          <td>${isActive(o) ? `
+            <div style="display:flex;gap:6px;align-items:center;">
+              <select data-assign="${o.id}" style="padding:6px 8px;border:1.5px solid var(--line);border-radius:9px;font-size:0.82rem;">
+                <option value="">Assign to…</option>
+                ${partners.map((p) => `<option value="${p.id}" ${o.partner_id === p.id ? "selected" : ""}>${escapeHtml(p.name || p.phone)}${p.is_online ? " (online)" : ""}</option>`).join("")}
+              </select>
+              <button class="mini" data-do="assign" data-id="${o.id}">Assign</button>
+              ${o.partner_id ? `<button class="mini" style="border-color:var(--rose);color:var(--rose);" data-do="unassign" data-id="${o.id}">Unassign</button>` : ""}
+            </div>` : '<span class="hint">—</span>'}</td>
         </tr>`).join("") + "</tbody></table>";
+
+    body.querySelectorAll("button[data-do='assign']").forEach((b) => {
+      b.onclick = async () => {
+        const sel = body.querySelector(`select[data-assign='${b.dataset.id}']`);
+        if (!sel.value) return toast("Pick a partner first");
+        try { await api("POST", `/api/owner/orders/${b.dataset.id}/assign`, { partner_id: sel.value }); toast("Assigned to partner"); loadOwnerOrders(); }
+        catch (e) { toast(e.message); }
+      };
+    });
+    body.querySelectorAll("button[data-do='unassign']").forEach((b) => {
+      b.onclick = async () => {
+        try { await api("POST", `/api/owner/orders/${b.dataset.id}/unassign`); toast("Unassigned — back to auto-assign"); loadOwnerOrders(); }
+        catch (e) { toast(e.message); }
+      };
+    });
   } catch (e) { body.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`; }
 }
 

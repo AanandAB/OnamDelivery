@@ -6,6 +6,7 @@ import { requireAuth } from "../lib/auth";
 import { orderNumber } from "../lib/id";
 import { distanceKm } from "../lib/geo";
 import { getRates, quote } from "../lib/pricing";
+import { assignNearest } from "../lib/assign";
 
 interface VendorRow {
   id: string;
@@ -152,6 +153,11 @@ export async function createOrder(
   }
   if (couponCode) {
     await env.DB.prepare("UPDATE coupons SET used = 1 WHERE code = ?1").bind(couponCode).run();
+  }
+
+  // Platform orders are auto-offered to the nearest online partner (60s window).
+  if (deliveryType === "platform") {
+    await assignNearest(env, orderId);
   }
 
   const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?1").bind(orderId).first();

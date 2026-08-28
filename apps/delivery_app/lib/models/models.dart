@@ -76,6 +76,7 @@ class PartnerOrder {
   final double? dropLng;
   final String dropAddress;
   final int createdAt;
+  final int? offerExpiresIn; // seconds left to accept a directed offer (null = pool order)
 
   const PartnerOrder({
     required this.id,
@@ -92,6 +93,7 @@ class PartnerOrder {
     this.dropLng,
     required this.dropAddress,
     required this.createdAt,
+    this.offerExpiresIn,
   });
 
   factory PartnerOrder.fromJson(Map<String, dynamic> j) => PartnerOrder(
@@ -111,6 +113,7 @@ class PartnerOrder {
         dropLng: (j['drop_lng'] as num?)?.toDouble(),
         dropAddress: j['drop_address'] as String? ?? '',
         createdAt: (j['created_at'] as num?)?.toInt() ?? 0,
+        offerExpiresIn: (j['offer_expires_in'] as num?)?.toInt(),
       );
 
   /// Human label for the fulfilment status chip.

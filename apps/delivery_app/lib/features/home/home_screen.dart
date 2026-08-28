@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +9,9 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/orders_provider.dart';
 
-/// Home — online toggle + the queue of unclaimed platform orders.
+/// Home — online toggle, incoming auto-assigned OFFERS (nearest-partner), and
+/// the open pool of unassigned orders. Offers refresh silently every ~10s so
+/// the accept/decline countdown stays current.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -16,11 +20,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Timer? _poll;
+
   @override
   void initState() {
     super.initState();
     // Load after the first frame so the router/shell is settled.
     Future.microtask(() => ref.read(ordersProvider.notifier).refresh());
+    _poll = Timer.periodic(const Duration(seconds: 10), (_) {
+      ref.read(ordersProvider.notifier).poll();
+    });
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
   }
 
   Future<void> _accept(PartnerOrder order) async {
@@ -34,9 +49,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Future<void> _decline(PartnerOrder order) async {
+    await ref.read(ordersProvider.notifier).decline(order.id);
+    if (mounted && ref.read(ordersProvider).error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ref.read(ordersProvider).error!)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(ordersProvider);
+    final isEmpty = state.offers.isEmpty && state.pool.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -61,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onRefresh: () => ref.read(ordersProvider.notifier).refresh(),
         child: state.loading
             ? const Center(child: CircularProgressIndicator())
-            : state.error != null && state.available.isEmpty
+            : state.error != null && isEmpty
                 ? _ErrorView(message: state.error!, onRetry: () => ref.read(ordersProvider.notifier).refresh())
                 : ListView(
                     padding: const EdgeInsets.all(16),
@@ -75,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  "You're offline. Go online to receive delivery orders.",
+                                  "You're offline. Go online to receive delivery offers.",
                                   style: TextStyle(color: AppTheme.muted),
                                 ),
                               ),
@@ -84,7 +109,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
                       ],
-                      if (state.available.isEmpty)
+
+                      // ---- Incoming offers (auto-assigned to me) ----
+                      if (state.offers.isNotEmpty) ...[
+                        const Row(
+                          children: [
+                            Icon(Icons.notifications_active, size: 18, color: AppTheme.rose),
+                            SizedBox(width: 8),
+                            Text('Incoming offers',
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Auto-assigned to you — respond before the timer runs out',
+                            style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+                        const SizedBox(height: 12),
+                        ...state.offers.map((o) => _OrderCard(
+                              order: o,
+                              isOffer: true,
+                              onAccept: () => _accept(o),
+                              onDecline: () => _decline(o),
+                            )),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // ---- Open pool ----
+                      if (state.pool.isNotEmpty) ...[
+                        Text('Open pool (${state.pool.length})',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                        const SizedBox(height: 4),
+                        Text('Unassigned orders — first to accept gets them',
+                            style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+                        const SizedBox(height: 12),
+                        ...state.pool.map((o) => _OrderCard(
+                              order: o,
+                              isOffer: false,
+                              onAccept: () => _accept(o),
+                            )),
+                      ],
+
+                      if (isEmpty)
                         const Padding(
                           padding: EdgeInsets.only(top: 80),
                           child: Center(
@@ -95,17 +159,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Text('No orders available right now',
                                     style: TextStyle(color: AppTheme.muted)),
                                 SizedBox(height: 4),
-                                Text('Pull down to refresh', style: TextStyle(color: AppTheme.muted, fontSize: 12)),
+                                Text('You\'ll be pinged when an order lands nearby',
+                                    style: TextStyle(color: AppTheme.muted, fontSize: 12)),
                               ],
                             ),
                           ),
-                        )
-                      else ...[
-                        Text('Available orders (${state.available.length})',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        ...state.available.map((o) => _OrderCard(order: o, onAccept: () => _accept(o))),
-                      ],
+                        ),
                     ],
                   ),
       ),
@@ -115,9 +174,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 class _OrderCard extends StatelessWidget {
   final PartnerOrder order;
+  final bool isOffer;
   final VoidCallback onAccept;
+  final VoidCallback? onDecline;
 
-  const _OrderCard({required this.order, required this.onAccept});
+  const _OrderCard({
+    required this.order,
+    required this.isOffer,
+    required this.onAccept,
+    this.onDecline,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -173,10 +239,44 @@ class _OrderCard extends StatelessWidget {
               Text('Collect ${formatRupees(order.subtotal)} (COD)',
                   style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.ink)),
             ],
+            if (isOffer) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.timer_outlined, size: 16, color: order.offerExpiresIn != null && order.offerExpiresIn! <= 15 ? AppTheme.rose : AppTheme.muted),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Respond within ~${order.offerExpiresIn ?? 0}s',
+                    style: TextStyle(
+                      color: order.offerExpiresIn != null && order.offerExpiresIn! <= 15 ? AppTheme.rose : AppTheme.muted,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(onPressed: onAccept, child: const Text('Accept order')),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(onPressed: onAccept, child: const Text('Accept order')),
+                ),
+                if (isOffer) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onDecline,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.rose,
+                        side: const BorderSide(color: AppTheme.rose),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Decline'),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
