@@ -89,6 +89,27 @@ interface Dict {
     track: string;
     browse: string;
   };
+  track: {
+    title: string;
+    pickup: string;
+    drop: string;
+    partner: string;
+    waiting: string;
+    refreshHint: string;
+    status: Record<string, string>;
+  };
+  review: {
+    rateThis: string;
+    yourRating: string;
+    commentPlaceholder: string;
+    submit: string;
+    thanks: string;
+  };
+  upi: {
+    payWithUpi: string;
+    orCopy: string;
+    copied: string;
+  };
 }
 
 const dict: Record<Lang, Dict> = {
@@ -183,6 +204,34 @@ const dict: Record<Lang, Dict> = {
       track: "Track my order",
       browse: "Continue shopping",
     },
+    track: {
+      title: "Track order",
+      pickup: "Pickup",
+      drop: "Delivery",
+      partner: "Delivery partner",
+      waiting: "Waiting for a partner to accept…",
+      refreshHint: "Live position refreshes automatically.",
+      status: {
+        placed: "Placed",
+        accepted: "Accepted",
+        picked_up: "Picked up",
+        out_for_delivery: "On the way",
+        delivered: "Delivered",
+        cancelled: "Cancelled",
+      },
+    },
+    review: {
+      rateThis: "Rate this order",
+      yourRating: "Your rating",
+      commentPlaceholder: "How were your flowers? (optional)",
+      submit: "Submit review",
+      thanks: "Thanks for your review!",
+    },
+    upi: {
+      payWithUpi: "Pay with UPI",
+      orCopy: "Or copy the UPI ID",
+      copied: "UPI ID copied",
+    },
   },
   ml: {
     brand: "ഓണം ഡെലിവറി",
@@ -274,6 +323,34 @@ const dict: Record<Lang, Dict> = {
       successSub: "നിങ്ങളുടെ ഓർഡർ സ്ഥിരീകരിച്ചു.",
       track: "ഓർഡർ ട്രാക്ക് ചെയ്യുക",
       browse: "തുടർന്ന് ഷോപ്പിംഗ്",
+    },
+    track: {
+      title: "ഓർഡർ ട്രാക്ക് ചെയ്യുക",
+      pickup: "പിക്കപ്പ്",
+      drop: "ഡെലിവറി",
+      partner: "ഡെലിവറി പങ്കാളി",
+      waiting: "പങ്കാളി സ്വീകരിക്കാൻ കാത്തിരിക്കുന്നു…",
+      refreshHint: "തത്സമയ സ്ഥാനം സ്വയം അപ്ഡേറ്റാകുന്നു.",
+      status: {
+        placed: "നൽകി",
+        accepted: "സ്വീകരിച്ചു",
+        picked_up: "എടുത്തു",
+        out_for_delivery: "വഴിയിൽ",
+        delivered: "എത്തിച്ചു",
+        cancelled: "റദ്ദാക്കി",
+      },
+    },
+    review: {
+      rateThis: "ഈ ഓർഡർ റേറ്റ് ചെയ്യുക",
+      yourRating: "നിങ്ങളുടെ റേറ്റിംഗ്",
+      commentPlaceholder: "പൂക്കൾ എങ്ങനെയുണ്ടായിരുന്നു? (ഓപ്ഷണൽ)",
+      submit: "അവലോകനം സമർപ്പിക്കുക",
+      thanks: "നിങ്ങളുടെ അവലോകനത്തിന് നന്ദി!",
+    },
+    upi: {
+      payWithUpi: "UPI വഴി പണമടയ്ക്കുക",
+      orCopy: "അല്ലെങ്കിൽ UPI ID പകർത്തുക",
+      copied: "UPI ID പകർത്തി",
     },
   },
 };

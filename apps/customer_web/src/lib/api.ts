@@ -272,3 +272,20 @@ export function formatRupees(n: number): string {
   if (head) groups.unshift(head);
   return "₹" + [...groups, last3].join(",");
 }
+
+/** Build a UPI deep link (opens GPay/PhonePe on mobile). */
+export function upiIntent(
+  upiId: string,
+  payeeName: string,
+  amount: number,
+  note: string,
+): string {
+  const params = new URLSearchParams({
+    pa: upiId,
+    pn: payeeName,
+    am: amount.toFixed(2),
+    tn: note,
+    cu: "INR",
+  });
+  return `upi://pay?${params.toString()}`;
+}

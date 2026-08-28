@@ -12,6 +12,7 @@ import {
   validateCoupon,
   createOrder,
   formatRupees,
+  upiIntent,
   type Product,
   type Vendor,
   type Settings,
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [placed, setPlaced] = useState<Order | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!vendorId) return;
@@ -171,6 +173,31 @@ export default function CheckoutPage() {
             {formatRupees(placed.total)}
           </p>
         </div>
+
+        {rates?.upi_id && (
+          <div className="mt-6 rounded-2xl border border-line bg-card p-5 shadow-soft">
+            <p className="text-sm font-semibold text-ink">{t.upi.payWithUpi}</p>
+            <a
+              href={upiIntent(rates.upi_id, "OnamDelivery", placed.total, `Order ${placed.id}`)}
+              className="mt-3 block w-full rounded-full bg-leaf py-3 text-center font-bold text-white transition-opacity hover:opacity-90"
+            >
+              {t.upi.payWithUpi} · {formatRupees(placed.total)}
+            </a>
+            <button
+              onClick={() => {
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(rates.upi_id!);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }
+              }}
+              className="mt-2 w-full text-center text-sm text-muted hover:text-ink"
+            >
+              {copied ? t.upi.copied : t.upi.orCopy}: <b>{rates.upi_id}</b>
+            </button>
+          </div>
+        )}
+
         <div className="mt-6 flex gap-3">
           <Link
             href="/orders"
